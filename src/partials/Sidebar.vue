@@ -325,12 +325,6 @@ export default {
             iconComponent: Cog6ToothIcon,
             roles: ["superadmin", "admin"],
           },
-          {
-            name: "Logout",
-            path: "/logout",
-            iconComponent: ArrowLeftOnRectangleIcon,
-            roles: ["superadmin", "admin"],
-          },
         ],
       },
     ]);
@@ -350,11 +344,6 @@ export default {
       });
       return processedGroups.filter((group) => group !== null);
     });
-
-    // Fungsi untuk memanggil action logout dari store
-    const handleLogout = async () => {
-      await authStore.logout();
-    };
 
     // Event handlers untuk sidebar mobile
     const clickHandler = ({ target }) => {
@@ -396,7 +385,6 @@ export default {
       sidebarExpanded,
       authStore,
       filteredMenu,
-      handleLogout,
     };
   },
 };

@@ -109,7 +109,6 @@ import DashboardCard10 from "../partials/dashboard/DashboardCard10.vue";
 import DashboardCard11 from "../partials/dashboard/DashboardCard11.vue";
 import DashboardCard12 from "../partials/dashboard/DashboardCard12.vue";
 import DashboardCard13 from "../partials/dashboard/DashboardCard13.vue";
-import Banner from "../partials/Banner.vue";
 
 export default {
   name: "Dashboard",
@@ -131,7 +130,6 @@ export default {
     DashboardCard11,
     DashboardCard12,
     DashboardCard13,
-    Banner,
   },
   setup() {
     const sidebarOpen = ref(false);
