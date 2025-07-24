@@ -2,6 +2,13 @@
 import { IAuthRepository } from "../../domain/repository/IAuthRepository";
 import { UserEntity } from "../../domain/entities/UserEntity";
 import {
+  left,
+  right,
+  ServerFailure,
+  IncorrectPasswordFailure,
+  RateLimitFailure,
+} from "../../../../core/error/failure.js"; // Impor dari core
+import {
   LoginResponseModel,
   ProfileUserModel,
 } from "../models/AuthResponseModel.js";
@@ -14,39 +21,76 @@ export class AuthRepository extends IAuthRepository {
   }
 
   async login(email, password) {
-    const loginApiResponse = await this.remoteSource.login(email, password);
-    const loginModel = LoginResponseModel.fromJSON(loginApiResponse);
-    const token = loginModel.token;
+    // PERUBAHAN: Tambahkan try-catch untuk menangani error
+    try {
+      const loginApiResponse = await this.remoteSource.login(email, password);
+      const loginModel = LoginResponseModel.fromJSON(loginApiResponse);
+      const token = loginModel.token;
 
-    if (!token) {
-      throw new Error("Login gagal: Token tidak diterima.");
+      if (!token) {
+        return left(new ServerFailure("Login gagal: Token tidak diterima."));
+      }
+
+      localStorage.setItem("auth_token", token);
+
+      // Gunakan getProfile dari instance ini agar juga menangani Either
+      const profileResult = await this.getProfile(token);
+
+      // Cek apakah getProfile juga gagal
+      if (profileResult.left) {
+        return left(profileResult.left);
+      }
+
+      const userEntity = profileResult.right;
+
+      // PERUBAHAN: Kembalikan data sukses dalam 'right'
+      return right({ token, user: userEntity });
+    } catch (error) {
+      // PERUBAHAN: Logika untuk mem-parsing error spesifik
+      const statusCode = error.response?.status;
+      const errorData = error.response?.data;
+
+      if (statusCode === 401) {
+        // Jika password salah, gunakan pesan dari 'remaining_attempts'
+        const specificMessage =
+          errorData?.error?.remaining_attempts ||
+          errorData?.message ||
+          "Password salah.";
+        return left(new IncorrectPasswordFailure(specificMessage));
+      }
+
+      if (statusCode === 429) {
+        // Jika terlalu banyak percobaan, ambil waktu countdown
+        const retrySeconds = errorData?.error?.retry_after_seconds || 60;
+        return left(new RateLimitFailure(errorData.message, retrySeconds));
+      }
+
+      // Untuk semua error lainnya
+      return left(
+        new ServerFailure(error.message || "Terjadi kesalahan pada server.")
+      );
     }
-
-    localStorage.setItem("auth_token", token);
-
-    const profileApiResponse = await this.remoteSource.getProfile(token);
-    const profileModel = ProfileUserModel.fromJSON(profileApiResponse.data);
-
-    const userEntity = new UserEntity({
-      id: profileModel.id,
-      name: profileModel.name,
-      email: profileModel.email,
-      role: profileModel.roleName,
-    });
-
-    return { token, user: userEntity };
   }
 
   async getProfile(token) {
-    const profileApiResponse = await this.remoteSource.getProfile();
-    const profileModel = ProfileUserModel.fromJSON(profileApiResponse.data);
+    // PERUBAHAN: Tambahkan try-catch untuk menangani error
+    try {
+      const profileApiResponse = await this.remoteSource.getProfile(token);
+      const profileModel = ProfileUserModel.fromJSON(profileApiResponse.data);
 
-    return new UserEntity({
-      id: profileModel.id,
-      name: profileModel.name,
-      email: profileModel.email,
-      role: profileModel.roleName,
-    });
+      const userEntity = new UserEntity({
+        id: profileModel.id,
+        name: profileModel.name,
+        email: profileModel.email,
+        role: profileModel.roleName,
+      });
+
+      // PERUBAHAN: Kembalikan data sukses dalam 'right'
+      return right(userEntity);
+    } catch (error) {
+      // PERUBAHAN: Kembalikan error dalam 'left'
+      return left(new ServerFailure(error.message));
+    }
   }
 
   async logout() {

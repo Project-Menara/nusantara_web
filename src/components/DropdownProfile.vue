@@ -87,13 +87,13 @@
       <template #header>
         <DialogTitle
           as="h3"
-          class="text-lg font-medium leading-6 text-gray-900"
+          class="text-lg font-medium leading-6"
         >
           Konfirmasi Logout
         </DialogTitle>
       </template>
       <template #body>
-        <p class="text-sm text-gray-500 mt-4">
+        <p class="text-sm mt-4">
           Apakah Anda yakin ingin keluar dari sesi ini?
         </p>
       </template>

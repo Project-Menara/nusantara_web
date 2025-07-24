@@ -32,7 +32,7 @@
               <slot name="header">
                 <DialogTitle
                   as="h3"
-                  class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-400"
+                  class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-500"
                 >
                   Judul Modal Default
                 </DialogTitle>

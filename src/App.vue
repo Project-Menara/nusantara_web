@@ -1,8 +1,10 @@
 <template>
   <router-view />
+
+  <GlobalResponseModal />
 </template>
 
-<script>
-import './charts/ChartjsConfig';
+<script setup>
+import "./charts/ChartjsConfig";
+import GlobalResponseModal from "./components/modals/GlobalResponseModal.vue";
 </script>
-

@@ -10,12 +10,11 @@ export class AuthRemoteSource {
       });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || "Login gagal");
+      throw new Error(error.response?.data?.message || "Login gagawl");
     }
   }
 
   async getProfile() {
-    // <-- TIDAK perlu argumen token lagi
     try {
       // Panggil endpoint. Token akan ditambahkan otomatis oleh interceptor di apiClient.
       const response = await apiClient.get("/user/admin/me");
