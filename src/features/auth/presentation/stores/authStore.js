@@ -9,7 +9,7 @@ import { LogoutUserUseCase } from "../../domain/use-cases/LogoutUserUseCase";
 import { mapFailureToMessage } from "../../../../core/error/map_failure_to_message";
 import {
   RateLimitFailure,
-  IncorrectPasswordFailure
+  IncorrectPasswordFailure,
 } from "../../../../core/error/failure";
 
 export const useAuthStore = defineStore("auth", () => {
@@ -53,7 +53,7 @@ export const useAuthStore = defineStore("auth", () => {
         // Jika error 401, kirim pesan spesifik
         modalStore.openModal({
           newTitle: "Login Gagal",
-          newMessage: failure.message, // Gunakan pesan dari failure, bukan dari mapper
+          newMessage: failure.message,
           newStatus: "error",
         });
       } else {
@@ -114,7 +114,7 @@ export const useAuthStore = defineStore("auth", () => {
       token.value = null;
       isAuthenticated.value = false;
       isLoading.value = false;
-      window.location.href = "/login";
+      window.location.href = "/";
     }
   }
 

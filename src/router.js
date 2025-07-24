@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard.vue";
 import { useAuthStore } from "./features/auth/presentation/stores/authStore";
 import LoginPage from "./features/auth/presentation/pages/LoginPage.vue";
 import Forbidden from "./partials/Forbidden.vue";
+// import SettingsPage from "./features/settings/presentation/pages/SettingsPage.vue";
 
 const placeholderPage = Dashboard; // Placeholder untuk halaman lain
 
