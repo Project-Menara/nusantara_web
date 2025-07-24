@@ -21,7 +21,7 @@ export class ProfileUserModel {
     this.id = id;
     this.name = name;
     this.email = email;
-    this.roleName = role.Name;
+    this.roleName = role.name;
   }
 
   static fromJSON(json) {

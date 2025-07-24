@@ -9,7 +9,7 @@ import { LogoutUserUseCase } from "../../domain/use-cases/LogoutUserUseCase";
 import { mapFailureToMessage } from "../../../../core/error/map_failure_to_message";
 import {
   RateLimitFailure,
-  IncorrectPasswordFailure,
+  IncorrectPasswordFailure
 } from "../../../../core/error/failure";
 
 export const useAuthStore = defineStore("auth", () => {

@@ -21,7 +21,6 @@ export class AuthRepository extends IAuthRepository {
   }
 
   async login(email, password) {
-    // PERUBAHAN: Tambahkan try-catch untuk menangani error
     try {
       const loginApiResponse = await this.remoteSource.login(email, password);
       const loginModel = LoginResponseModel.fromJSON(loginApiResponse);
@@ -32,21 +31,15 @@ export class AuthRepository extends IAuthRepository {
       }
 
       localStorage.setItem("auth_token", token);
+      const profileResult = await this.getProfile();
 
-      // Gunakan getProfile dari instance ini agar juga menangani Either
-      const profileResult = await this.getProfile(token);
-
-      // Cek apakah getProfile juga gagal
       if (profileResult.left) {
         return left(profileResult.left);
       }
 
       const userEntity = profileResult.right;
-
-      // PERUBAHAN: Kembalikan data sukses dalam 'right'
       return right({ token, user: userEntity });
     } catch (error) {
-      // PERUBAHAN: Logika untuk mem-parsing error spesifik
       const statusCode = error.response?.status;
       const errorData = error.response?.data;
 

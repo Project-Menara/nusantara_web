@@ -10,7 +10,8 @@ export class AuthRemoteSource {
       });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || "Login gagawl");
+      // BENAR: Lempar kembali error aslinya agar status_code tetap ada
+      throw error;
     }
   }
 
