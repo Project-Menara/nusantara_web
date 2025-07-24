@@ -1,4 +1,3 @@
-// features/auth/data/source/AuthRemoteSource.js
 import apiClient from "../../../../lib/apiClient";
 
 export class AuthRemoteSource {
@@ -10,20 +9,18 @@ export class AuthRemoteSource {
       });
       return response.data;
     } catch (error) {
-      // BENAR: Lempar kembali error aslinya agar status_code tetap ada
+      // Ini sudah benar
       throw error;
     }
   }
 
   async getProfile() {
     try {
-      // Panggil endpoint. Token akan ditambahkan otomatis oleh interceptor di apiClient.
       const response = await apiClient.get("/user/admin/me");
       return response.data;
     } catch (error) {
-      throw new Error(
-        error.response?.data?.message || "Gagal mengambil profil"
-      );
+      // Diperbaiki agar konsisten dengan login
+      throw error;
     }
   }
 
@@ -31,7 +28,6 @@ export class AuthRemoteSource {
     try {
       await apiClient.post("/user/admin/logout");
     } catch (error) {
-      // Kita bisa abaikan error di sini, karena logout di client harus tetap berjalan
       console.error(
         "Server logout failed, proceeding with client-side logout.",
         error

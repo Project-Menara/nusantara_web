@@ -17,11 +17,26 @@ export class LoginResponseModel {
 
 // Model untuk nested object 'data' dari API /auth/me
 export class ProfileUserModel {
-  constructor({ id, name, email, role }) {
+  constructor({
+    id,
+    name,
+    email,
+    role,
+    username,
+    phone,
+    gender,
+    date_of_birth,
+    photo,
+  }) {
     this.id = id;
     this.name = name;
     this.email = email;
+    this.username = username;
     this.roleName = role.name;
+    this.phone = phone;
+    this.gender = gender;
+    this.dateOfBirth = date_of_birth;
+    this.photo = photo;
   }
 
   static fromJSON(json) {
@@ -29,7 +44,12 @@ export class ProfileUserModel {
       id: json.id,
       name: json.name,
       email: json.email,
+      username: json.username,
       role: json.role,
+      phone: json.phone,
+      gender: json.gender,
+      date_of_birth: json.date_of_birth,
+      photo: json.photo,
     });
   }
 }

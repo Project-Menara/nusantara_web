@@ -27,7 +27,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { useSettingsStore } from '@/features/settings/presentation/stores/settingsStore';
+import { useSettingsStore } from '../stores/settingsStore';
 
 const settingsStore = useSettingsStore();
 const passwords = ref({

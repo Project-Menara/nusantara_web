@@ -7,7 +7,7 @@ import {
   ServerFailure,
   IncorrectPasswordFailure,
   RateLimitFailure,
-} from "../../../../core/error/failure.js"; 
+} from "../../../../core/error/failure.js";
 import {
   LoginResponseModel,
   ProfileUserModel,
@@ -76,6 +76,11 @@ export class AuthRepository extends IAuthRepository {
         name: profileModel.name,
         email: profileModel.email,
         role: profileModel.roleName,
+        username: profileModel.username,
+        phone: profileModel.phone || "",
+        gender: profileModel.gender || "",
+        dateOfBirth: profileModel.dateOfBirth || "",
+        photo: profileModel.photo || "",
       });
 
       // PERUBAHAN: Kembalikan data sukses dalam 'right'

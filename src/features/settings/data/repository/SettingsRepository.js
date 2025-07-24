@@ -4,8 +4,8 @@ import {
   right,
   ServerFailure,
   IncorrectPasswordFailure,
-} from "@/core/error/failures.js";
-import { SettingsRemoteSource } from "./SettingsRemoteSource";
+} from "../../../../core/error/failure";
+import { SettingsRemoteSource } from "../source/SettingsRemoteSource";
 
 export class SettingsRepository extends ISettingsRepository {
   constructor() {
