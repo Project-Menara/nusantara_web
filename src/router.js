@@ -1,95 +1,119 @@
-// src/router.js
 import { createRouter, createWebHistory } from "vue-router";
-
-// Impor komponen Halaman
-import Dashboard from "./pages/Dashboard.vue";
 import { useAuthStore } from "./features/auth/presentation/stores/authStore";
-import LoginPage from "./features/auth/presentation/pages/LoginPage.vue";
-import Forbidden from "./partials/Forbidden.vue";
-import SettingsPage from "./features/settings/presentation/pages/SettingsPage.vue";
 
-const placeholderPage = Dashboard; // Placeholder untuk halaman lain
+// Impor Layout
+import DashboardLayout from "./layouts/DashboardLayout.vue";
+
+// Impor Halaman
+import LoginPage from "./features/auth/presentation/pages/LoginPage.vue";
+import Dashboard from "./pages/Dashboard.vue";
+import SettingsPage from "./features/settings/presentation/pages/SettingsPage.vue";
+import Forbidden from "./partials/Forbidden.vue";
 
 const routes = [
-  // Halaman publik yang tidak butuh otentikasi
-  { path: "/login", name: "Login", component: LoginPage },
-  { path: "/utility/403", name: "Forbidden", component: Forbidden },
-
-  // Redirect dari root ke dashboard
-  { path: "/", redirect: "/dashboard" },
-
-  // --- Group Utama ---
+  // Halaman publik yang tidak menggunakan layout utama
   {
-    path: "/dashboard",
-    component: placeholderPage,
-    meta: { roles: ["superadmin", "admin"] },
+    path: "/login",
+    name: "Login",
+    component: LoginPage,
   },
   {
-    path: "/products",
-    component: placeholderPage,
-    meta: { roles: ["superadmin", "admin"] },
-  },
-  { path: "/orders", component: placeholderPage, meta: { roles: ["admin"] } },
-  { path: "/finance", component: placeholderPage, meta: { roles: ["admin"] } },
-  // ... (semua route lain yang memerlukan role)
-  {
-    path: "/product-types",
-    component: placeholderPage,
-    meta: { roles: ["superadmin"] },
-  },
-  {
-    path: "/store-management",
-    component: placeholderPage,
-    meta: { roles: ["superadmin"] },
-  },
-  {
-    path: "/cashier-management",
-    component: placeholderPage,
-    meta: { roles: ["superadmin"] },
-  },
-  {
-    path: "/customer-reviews",
-    component: placeholderPage,
-    meta: { roles: ["superadmin"] },
-  },
-  {
-    path: "/banners",
-    component: placeholderPage,
-    meta: { roles: ["superadmin"] },
-  },
-  {
-    path: "/events",
-    component: placeholderPage,
-    meta: { roles: ["superadmin"] },
-  },
-  {
-    path: "/vouchers",
-    component: placeholderPage,
-    meta: { roles: ["superadmin"] },
-  },
-  {
-    path: "/transaction-reports",
-    component: placeholderPage,
-    meta: { roles: ["superadmin"] },
-  },
-  {
-    path: "/financial-reports",
-    component: placeholderPage,
-    meta: { roles: ["superadmin"] },
-  },
-  {
-    path: "/settings",
-    component: SettingsPage,
-    meta: { roles: ["superadmin", "admin"] },
-  },
-  {
-    path: "/logout",
-    component: placeholderPage,
-    meta: { roles: ["superadmin", "admin"] },
+    path: "/utility/403",
+    name: "Forbidden",
+    component: Forbidden,
   },
 
-  // Route Catch-all (404 Not Found)
-  { path: "/:pathMatch(.*)*", name: "NotFound", component: Forbidden },
+  // Halaman terproteksi yang menggunakan DashboardLayout
+  {
+    path: "/",
+    component: DashboardLayout,
+    children: [
+      { path: "", redirect: "/dashboard" },
+      {
+        path: "dashboard",
+        name: "Dashboard",
+        component: Dashboard,
+        meta: { roles: ["superadmin", "admin"] },
+      },
+      // --- Group Utama ---
+      {
+        path: "product-types",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["superadmin"] },
+      },
+      {
+        path: "products",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["superadmin", "admin"] },
+      },
+      {
+        path: "store-management",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["superadmin"] },
+      },
+      {
+        path: "cashier-management",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["superadmin"] },
+      },
+      {
+        path: "customer-reviews",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["superadmin"] },
+      },
+      {
+        path: "orders",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["admin"] },
+      },
+      {
+        path: "finance",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["admin"] },
+      },
+      // --- Group Promosi ---
+      {
+        path: "banners",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["superadmin"] },
+      },
+      {
+        path: "events",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["superadmin"] },
+      },
+      {
+        path: "vouchers",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["superadmin"] },
+      },
+      // --- Group Laporan ---
+      {
+        path: "transaction-reports",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["superadmin"] },
+      },
+      {
+        path: "financial-reports",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["superadmin"] },
+      },
+      // --- Group Lainnya ---
+      {
+        path: "settings",
+        name: "Settings",
+        component: SettingsPage,
+        meta: { roles: ["superadmin", "admin"] },
+      },
+    ],
+  },
+
+  // Route Catch-all untuk halaman tidak ditemukan (404)
+  {
+    path: "/:pathMatch(.*)*",
+    name: "NotFound",
+    component: Forbidden,
+  },
 ];
 
 const router = createRouter({
@@ -97,30 +121,27 @@ const router = createRouter({
   routes,
 });
 
-// Navigation guard baru
+// Navigation guard Anda sudah benar dan tidak perlu diubah
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const requiredRoles = to.meta.roles;
 
-  // Jika route memerlukan role (halaman terproteksi)
   if (requiredRoles) {
-    // Cukup periksa isAuthenticated. Flag ini sekarang sudah akurat.
     if (authStore.isAuthenticated) {
       const userRole = authStore.user.role;
       if (requiredRoles.includes(userRole)) {
-        next(); // Role sesuai, izinkan akses
+        next();
       } else {
-        next({ name: "Forbidden" }); // Role tidak sesuai
+        next({ name: "Forbidden" });
       }
     } else {
-      next({ name: "Login" }); // Belum login
+      next({ name: "Login" });
     }
   } else {
-    // Untuk halaman publik (seperti /login)
     if (to.name === "Login" && authStore.isAuthenticated) {
-      next({ path: "/dashboard" }); // Jika sudah login, jangan biarkan ke halaman login lagi
+      next({ path: "/dashboard" });
     } else {
-      next(); // Izinkan akses
+      next();
     }
   }
 });

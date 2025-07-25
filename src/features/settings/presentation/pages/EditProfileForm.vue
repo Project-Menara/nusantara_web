@@ -7,8 +7,8 @@
     <form v-else @submit.prevent="handleSubmit">
       <div class="flex items-center space-x-4 mb-6">
         <img
-          class="w-20 h-20 rounded-full"
-          :src="formData.photo || 'https://via.placeholder.com/150'"
+          class="w-20 h-20 rounded-full object-cover"
+          :src="userPhoto"
           alt="User"
         />
         <div>
@@ -107,8 +107,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { useModalStore } from "../../../../stores/modalStore";
+import UserAvatar from "@/images/user-avatar-32.png"; // Impor gambar default
 
 const props = defineProps({
   user: Object,
@@ -117,12 +118,21 @@ const props = defineProps({
 const formData = ref({});
 const modalStore = useModalStore();
 
+// PERUBAHAN: Buat computed property untuk foto profil
+const userPhoto = computed(() => {
+  // Jika props.user.photo ada isinya
+  if (props.user?.photo) {
+    return props.user.photo;
+  }
+  // Jika tidak, gunakan gambar placeholder
+  return UserAvatar;
+});
+
 // Salin data dari props ke state lokal saat props tersedia
 watch(
   () => props.user,
   (newUser) => {
     if (newUser) {
-      // Pastikan dateOfBirth di-format ke YYYY-MM-DD untuk input type="date"
       const formattedUser = { ...newUser };
       if (formattedUser.dateOfBirth) {
         formattedUser.dateOfBirth = formattedUser.dateOfBirth.split("T")[0];

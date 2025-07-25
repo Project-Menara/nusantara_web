@@ -9,7 +9,7 @@
     >
       <img
         class="w-8 h-8 rounded-full"
-        :src="UserAvatar"
+        :src="userPhoto"
         width="32"
         height="32"
         alt="User"
@@ -77,10 +77,7 @@
       @confirm="confirmLogout"
     >
       <template #header>
-        <DialogTitle
-          as="h3"
-          class="text-lg font-medium leading-6"
-        >
+        <DialogTitle as="h3" class="text-lg font-medium leading-6">
           Konfirmasi Logout
         </DialogTitle>
       </template>
@@ -94,7 +91,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+// PERUBAHAN: Impor 'computed'
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useAuthStore } from "../features/auth/presentation/stores/authStore";
 import BaseModal from "./modals/BaseModal.vue";
 import { DialogTitle } from "@headlessui/vue";
@@ -112,28 +110,29 @@ const trigger = ref(null);
 const dropdown = ref(null);
 const authStore = useAuthStore();
 const isLogoutModalOpen = ref(false);
-
-// 2. PERUBAHAN: Tambahkan state untuk loading
 const isLoading = ref(false);
+
+// PERUBAHAN: Buat computed property untuk foto profil
+const userPhoto = computed(() => {
+  // Jika authStore.user.photo ada isinya (bukan null atau string kosong)
+  if (authStore.user?.photo) {
+    return authStore.user.photo; // Gunakan foto dari API
+  }
+  // Jika tidak, gunakan UserAvatar sebagai default
+  return UserAvatar;
+});
 
 const openLogoutModal = () => {
   dropdownOpen.value = false;
   isLogoutModalOpen.value = true;
 };
 
-// 3. PERUBAHAN: Modifikasi fungsi konfirmasi untuk menangani loading
 const confirmLogout = async () => {
   isLoading.value = true;
   try {
     await authStore.logout();
   } catch (error) {
     console.error("Logout error:", error);
-  } finally {
-    // isLoading dan isLogoutModalOpen tidak perlu diubah di sini
-    // karena fungsi logout akan me-refresh seluruh halaman.
-    // Jika logout tidak me-refresh, maka baris di bawah ini diperlukan:
-    // isLoading.value = false;
-    // isLogoutModalOpen.value = false;
   }
 };
 
