@@ -8,7 +8,9 @@ import DashboardLayout from "./layouts/DashboardLayout.vue";
 import LoginPage from "./features/auth/presentation/pages/LoginPage.vue";
 import Dashboard from "./pages/Dashboard.vue";
 import SettingsPage from "./features/settings/presentation/pages/SettingsPage.vue";
+import bannerPage from "./features/banner/presentation/pages/bannerPage.vue";
 import Forbidden from "./partials/Forbidden.vue";
+import BannerPage from "./features/banner/presentation/pages/bannerPage.vue";
 
 const routes = [
   // Halaman publik yang tidak menggunakan layout utama
@@ -74,7 +76,7 @@ const routes = [
       // --- Group Promosi ---
       {
         path: "banners",
-        component: Dashboard, // Placeholder
+        component: BannerPage, // Placeholder
         meta: { roles: ["superadmin"] },
       },
       {
