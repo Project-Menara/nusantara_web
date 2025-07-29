@@ -5,23 +5,19 @@ import { ROUTE_PATHS } from "./path";
 import DashboardLayout from "@/layouts/DashboardLayout.vue";
 
 // Impor Halaman
-import LoginPage from "@/features/auth/presentation/pages/LoginPage.vue";
 import Dashboard from "@/pages/Dashboard.vue";
-import SettingsPage from "@/features/settings/presentation/pages/SettingsPage.vue";
-import Forbidden from "@/partials/Forbidden.vue";
-import BannerPage from "@/features/banner/presentation/pages/BannerPage.vue";
 
 const routes = [
   // Halaman publik yang tidak menggunakan layout utama
   {
     path: ROUTE_PATHS.LOGIN,
     name: "Login",
-    component: LoginPage,
+    component: () => import("@/features/auth/presentation/pages/LoginPage.vue"),
   },
   {
     path: ROUTE_PATHS.FORBIDDEN,
     name: "Forbidden",
-    component: Forbidden,
+    component: () => import("@/partials/Forbidden.vue"),
   },
 
   // Halaman terproteksi yang menggunakan DashboardLayout
@@ -75,7 +71,8 @@ const routes = [
       // --- Group Promosi ---
       {
         path: "banners",
-        component: BannerPage, // Placeholder
+        component: () =>
+          import("@/features/banner/presentation/pages/BannerPage.vue"), // Placeholder
         meta: { roles: ["superadmin"] },
       },
       {
@@ -103,7 +100,8 @@ const routes = [
       {
         path: "settings",
         name: "Settings",
-        component: SettingsPage,
+        component: () =>
+          import("@/features/settings/presentation/pages/SettingsPage.vue"),
         meta: { roles: ["superadmin", "admin"] },
       },
     ],
@@ -113,7 +111,7 @@ const routes = [
   {
     path: "/:pathMatch(.*)*",
     name: "NotFound",
-    component: Forbidden,
+    component: () => import("@/partials/Forbidden.vue"),
   },
 ];
 

@@ -144,6 +144,7 @@
 <script setup>
 import { ref, onMounted, computed, h } from "vue";
 import { useBannerStore } from "@/features/banner/presentation/stores/bannerStore";
+import { storeToRefs } from "pinia";
 import {
   useVueTable,
   getCoreRowModel,
@@ -163,6 +164,10 @@ import { DialogTitle } from "@headlessui/vue";
 
 // 1. State & Store
 const bannerStore = useBannerStore();
+
+// 2. Gunakan storeToRefs untuk mengambil state agar tetap reaktif
+const { bannerList, isLoading } = storeToRefs(bannerStore);
+
 const filtering = ref("");
 const sorting = ref([]);
 
@@ -272,9 +277,10 @@ const columns = [
       ]),
   },
 ];
+
 // 3. Inisialisasi TanStack Table
 const table = useVueTable({
-  data: bannerStore.bannerList,
+  data: bannerList,
   columns,
   state: {
     get globalFilter() {

@@ -14,6 +14,9 @@ export const useBannerStore = defineStore("banner", () => {
   const banners = ref([]);
   const pagination = ref(null);
   const isLoading = ref(false);
+  // flag caching
+  const hasFetched = ref(false);
+
   const isFormModalOpen = ref(false);
   const selectedBanner = ref(null);
   const isFormLoading = ref(false);
@@ -29,6 +32,11 @@ export const useBannerStore = defineStore("banner", () => {
   const deleteBannerUseCase = new DeleteBannerUseCase(repository);
 
   async function fetchBanners(page = 1) {
+    // 2. Cek flag. Jika sudah fetch, jangan panggil API lagi.
+    if (hasFetched.value && page === 1) {
+      return;
+    }
+
     isLoading.value = true;
     const result = await getBannersUseCase.execute(page);
     isLoading.value = false;
@@ -43,7 +51,14 @@ export const useBannerStore = defineStore("banner", () => {
     } else {
       banners.value = result.right.banners;
       pagination.value = result.right.pagination;
+      hasFetched.value = true; // <-- 3. Set flag setelah berhasil
     }
+  }
+
+  // 4. Buat fungsi untuk memaksa fetch ulang (misal: setelah create/delete)
+  async function forceRefreshBanners() {
+    hasFetched.value = false;
+    await fetchBanners();
   }
 
   async function openFormModal(bannerId = null) {
@@ -140,5 +155,6 @@ export const useBannerStore = defineStore("banner", () => {
     submitBanner,
     removeBanner,
     toggleBannerStatus,
+    forceRefreshBanners,
   };
 });
