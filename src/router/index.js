@@ -1,36 +1,35 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuthStore } from "./features/auth/presentation/stores/authStore";
-
+import { useAuthStore } from "../features/auth/presentation/stores/authStore";
+import { ROUTE_PATHS } from "./path";
 // Impor Layout
-import DashboardLayout from "./layouts/DashboardLayout.vue";
+import DashboardLayout from "@/layouts/DashboardLayout.vue";
 
 // Impor Halaman
-import LoginPage from "./features/auth/presentation/pages/LoginPage.vue";
-import Dashboard from "./pages/Dashboard.vue";
-import SettingsPage from "./features/settings/presentation/pages/SettingsPage.vue";
-import bannerPage from "./features/banner/presentation/pages/bannerPage.vue";
-import Forbidden from "./partials/Forbidden.vue";
-import BannerPage from "./features/banner/presentation/pages/bannerPage.vue";
+import LoginPage from "@/features/auth/presentation/pages/LoginPage.vue";
+import Dashboard from "@/pages/Dashboard.vue";
+import SettingsPage from "@/features/settings/presentation/pages/SettingsPage.vue";
+import Forbidden from "@/partials/Forbidden.vue";
+import BannerPage from "@/features/banner/presentation/pages/BannerPage.vue";
 
 const routes = [
   // Halaman publik yang tidak menggunakan layout utama
   {
-    path: "/login",
+    path: ROUTE_PATHS.LOGIN,
     name: "Login",
     component: LoginPage,
   },
   {
-    path: "/utility/403",
+    path: ROUTE_PATHS.FORBIDDEN,
     name: "Forbidden",
     component: Forbidden,
   },
 
   // Halaman terproteksi yang menggunakan DashboardLayout
   {
-    path: "/",
+    path: ROUTE_PATHS.HOME,
     component: DashboardLayout,
     children: [
-      { path: "", redirect: "/dashboard" },
+      { path: "", redirect: ROUTE_PATHS.DASHBOARD },
       {
         path: "dashboard",
         name: "Dashboard",
@@ -141,7 +140,7 @@ router.beforeEach((to, from, next) => {
     }
   } else {
     if (to.name === "Login" && authStore.isAuthenticated) {
-      next({ path: "/dashboard" });
+      next({ path: ROUTE_PATHS.DASHBOARD });
     } else {
       next();
     }

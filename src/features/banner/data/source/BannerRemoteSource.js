@@ -44,6 +44,17 @@ export class BannerRemoteSource {
     }
   }
 
+  async updateBannerStatus(id, status) {
+    try {
+      const response = await apiClient.put(`/banner/${id}/edit-status`, {
+        status,
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async deleteBanner(id) {
     try {
       const response = await apiClient.delete(`/banner/${id}/delete`);

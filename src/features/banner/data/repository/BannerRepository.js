@@ -5,6 +5,17 @@ import { left, right, ServerFailure } from "@/core/error/failure";
 import { BannerResponseModel } from "../models/BannerResponseModel";
 import { BannerRemoteSource } from "../source/BannerRemoteSource";
 
+// Helper untuk mapping model ke entity, agar tidak berulang
+const mapModelToEntity = (model) => {
+  return new BannerEntity({
+    id: model.id,
+    name: model.name,
+    photo: model.photo,
+    description: model.description,
+    isActive: model.status === 1,
+  });
+};
+
 export class BannerRepository extends IBannerRepository {
   constructor() {
     super();
@@ -16,15 +27,8 @@ export class BannerRepository extends IBannerRepository {
       const response = await this.remoteSource.getBanners(page);
       const bannerResponseModel = BannerResponseModel.fromJSON(response);
 
-      const banners = bannerResponseModel.banners.map(
-        (model) =>
-          new BannerEntity({
-            id: model.id,
-            name: model.name,
-            photo: model.photo,
-            description: model.description,
-            isActive: model.status === 1, // Konversi status 0/1 ke boolean
-          })
+      const banners = bannerResponseModel.banners.map((model) =>
+        mapModelToEntity(model)
       );
 
       const pagination = new PaginationEntity(bannerResponseModel.pagination);
@@ -41,11 +45,7 @@ export class BannerRepository extends IBannerRepository {
   async createBanner(formData) {
     try {
       const response = await this.remoteSource.createBanner(formData);
-      const model = BannerModel.fromJSON(response.data);
-      const entity = new BannerEntity({
-        /* ... mapping ... */
-      });
-      return right(entity);
+      return right(mapModelToEntity(response.data));
     } catch (error) {
       return left(
         new ServerFailure(
@@ -55,18 +55,40 @@ export class BannerRepository extends IBannerRepository {
     }
   }
 
+  async getBannerById(id) {
+    try {
+      const response = await this.remoteSource.getBannerById(id);
+      return right(mapModelToEntity(response.data));
+    } catch (error) {
+      return left(
+        new ServerFailure(
+          error.response?.data?.message || "Gagal mengambil detail banner."
+        )
+      );
+    }
+  }
+
   async updateBanner(id, formData) {
     try {
       const response = await this.remoteSource.updateBanner(id, formData);
-      const model = BannerModel.fromJSON(response.data);
-      const entity = new BannerEntity({
-        /* ... mapping ... */
-      });
-      return right(entity);
+      return right(mapModelToEntity(response.data));
     } catch (error) {
       return left(
         new ServerFailure(
           error.response?.data?.message || "Gagal memperbarui banner."
+        )
+      );
+    }
+  }
+
+  async updateBannerStatus(id, status) {
+    try {
+      const response = await this.remoteSource.updateBannerStatus(id, status);
+      return right(mapModelToEntity(response.data));
+    } catch (error) {
+      return left(
+        new ServerFailure(
+          error.response?.data?.message || "Gagal memperbarui status banner."
         )
       );
     }
@@ -80,23 +102,6 @@ export class BannerRepository extends IBannerRepository {
       return left(
         new ServerFailure(
           error.response?.data?.message || "Gagal menghapus banner."
-        )
-      );
-    }
-  }
-
-  async getBannerById(id) {
-    try {
-      const response = await this.remoteSource.getBannerById(id);
-      const model = BannerModel.fromJSON(response.data);
-      const entity = new BannerEntity({
-        /* ... mapping ... */
-      });
-      return right(entity);
-    } catch (error) {
-      return left(
-        new ServerFailure(
-          error.response?.data?.message || "Gagal mengambil detail banner."
         )
       );
     }

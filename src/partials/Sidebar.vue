@@ -175,6 +175,7 @@
 import { ref, onMounted, onUnmounted, watch, computed } from "vue";
 import { useAuthStore } from "../features/auth/presentation/stores/authStore";
 import SidebarLinkGroup from "./SidebarLinkGroup.vue";
+import { ROUTE_PATHS } from "../router/path";
 
 // Impor Ikon
 import {
@@ -221,7 +222,7 @@ export default {
       {
         type: "link",
         name: "Dashboard",
-        path: "/dashboard",
+        path: ROUTE_PATHS.DASHBOARD,
         iconComponent: HomeIcon,
         roles: ["superadmin", "admin"],
       },
@@ -231,43 +232,43 @@ export default {
         items: [
           {
             name: "Tipe-Produk",
-            path: "/product-types",
+            path: ROUTE_PATHS.PRODUCT_TYPES,
             iconComponent: TagIcon,
             roles: ["superadmin"],
           },
           {
             name: "Daftar-Produk",
-            path: "/products",
+            path: ROUTE_PATHS.PRODUCTS,
             iconComponent: ArchiveBoxIcon,
             roles: ["superadmin", "admin"],
           },
           {
             name: "Management-Toko",
-            path: "/store-management",
+            path: ROUTE_PATHS.STORE_MANAGEMENT,
             iconComponent: BuildingStorefrontIcon,
             roles: ["superadmin"],
           },
           {
             name: "Management-Kasir",
-            path: "/cashier-management",
+            path: ROUTE_PATHS.CASHIER_MANAGEMENT,
             iconComponent: UserGroupIcon,
             roles: ["superadmin"],
           },
           {
             name: "Ulasan-Pelanggan",
-            path: "/customer-reviews",
+            path: ROUTE_PATHS.CUSTOMER_REVIEWS,
             iconComponent: StarIcon,
             roles: ["superadmin"],
           },
           {
             name: "Pemesanan",
-            path: "/orders",
+            path: ROUTE_PATHS.ORDERS,
             iconComponent: DocumentTextIcon,
             roles: ["admin"],
           },
           {
             name: "Keuangan",
-            path: "/finance",
+            path: ROUTE_PATHS.FINANCE,
             iconComponent: BanknotesIcon,
             roles: ["admin"],
           },
@@ -279,19 +280,19 @@ export default {
         items: [
           {
             name: "Banner",
-            path: "/banners",
+            path: ROUTE_PATHS.BANNERS,
             iconComponent: PhotoIcon,
             roles: ["superadmin"],
           },
           {
             name: "Event",
-            path: "/events",
+            path: ROUTE_PATHS.EVENTS,
             iconComponent: CalendarDaysIcon,
             roles: ["superadmin"],
           },
           {
             name: "Voucher",
-            path: "/vouchers",
+            path: ROUTE_PATHS.VOUCHERS,
             iconComponent: TicketIcon,
             roles: ["superadmin"],
           },
@@ -303,13 +304,13 @@ export default {
         items: [
           {
             name: "Laporan-Transaksi",
-            path: "/transaction-reports",
+            path: ROUTE_PATHS.TRANSACTION_REPORTS,
             iconComponent: DocumentChartBarIcon,
             roles: ["superadmin"],
           },
           {
             name: "Laporan-Keuangan",
-            path: "/financial-reports",
+            path: ROUTE_PATHS.FINANCIAL_REPORTS,
             iconComponent: BanknotesIcon,
             roles: ["superadmin"],
           },
@@ -321,7 +322,7 @@ export default {
         items: [
           {
             name: "Setting",
-            path: "/settings",
+            path: ROUTE_PATHS.SETTINGS,
             iconComponent: Cog6ToothIcon,
             roles: ["superadmin", "admin"],
           },

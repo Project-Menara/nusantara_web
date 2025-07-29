@@ -11,6 +11,9 @@ export class IBannerRepository {
   async updateBanner(id, formData) {
     throw new Error("METHOD_NOT_IMPLEMENTED");
   }
+  async updateBannerStatus(id, status) {
+    throw new Error("METHOD_NOT_IMPLEMENTED");
+  }
   async deleteBanner(id) {
     throw new Error("METHOD_NOT_IMPLEMENTED");
   }

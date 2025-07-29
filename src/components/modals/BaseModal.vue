@@ -1,3 +1,4 @@
+<!-- BaseModal.vue -->
 <template>
   <TransitionRoot appear :show="isOpen" as="template">
     <Dialog as="div" @close="!loading && emit('close')" class="relative z-50">

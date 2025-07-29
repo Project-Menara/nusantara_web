@@ -1,3 +1,4 @@
+<!-- BannerPage -->
 <template>
   <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
     <div class="sm:flex sm:justify-between sm:items-center mb-5">
@@ -6,7 +7,10 @@
       >
         Banner
       </h1>
-      <button class="btn bg-violet-500 hover:bg-violet-600 text-white">
+      <button
+        @click="bannerStore.openFormModal()"
+        class="btn bg-violet-500 hover:bg-violet-600 text-white"
+      >
         <svg
           class="w-4 h-4 fill-current opacity-50 shrink-0"
           viewBox="0 0 16 16"
@@ -61,36 +65,18 @@
                 v-for="header in headerGroup.headers"
                 :key="header.id"
                 class="p-2 whitespace-nowrap"
-                :class="{
-                  'text-center':
-                    header.column.id === 'photo' ||
-                    header.column.id === 'isActive' ||
-                    header.column.id === 'actions',
-                  'text-left':
-                    header.column.id === 'name' ||
-                    header.column.id === 'description',
-                }"
               >
                 <div
-                  class="font-semibold cursor-pointer"
-                  :class="{
-                    'text-center':
-                      header.column.id === 'photo' ||
-                      header.column.id === 'isActive' ||
-                      header.column.id === 'actions',
-                    'text-left':
-                      header.column.id === 'name' ||
-                      header.column.id === 'description',
-                  }"
+                  class="font-semibold text-left cursor-pointer"
                   @click="header.column.getToggleSortingHandler()?.($event)"
                 >
                   <FlexRender
                     :render="header.column.columnDef.header"
                     :props="header.getContext()"
                   />
-                  <span v-if="header.column.getIsSorted()">
-                    {{ header.column.getIsSorted() === "asc" ? "🔼" : "🔽" }}
-                  </span>
+                  <span v-if="header.column.getIsSorted()">{{
+                    header.column.getIsSorted() === "asc" ? "🔼" : "🔽"
+                  }}</span>
                 </div>
               </th>
             </tr>
@@ -98,7 +84,9 @@
           <tbody
             class="text-sm divide-y divide-gray-100 dark:divide-gray-700/60"
           >
-            <tr v-if="bannerStore.isLoading">
+            <tr
+              v-if="bannerStore.isLoading && bannerStore.banners.length === 0"
+            >
               <td :colspan="columns.length" class="p-4 text-center">
                 Memuat data...
               </td>
@@ -108,24 +96,12 @@
                 Data tidak ditemukan.
               </td>
             </tr>
-            <tr
-              v-for="row in table.getRowModel().rows"
-              :key="row.id"
-              class="hover:bg-gray-50 dark:hover:bg-gray-700/30"
-            >
+
+            <tr v-for="row in table.getRowModel().rows" :key="row.id">
               <td
                 v-for="cell in row.getVisibleCells()"
                 :key="cell.id"
-                class="p-3 whitespace-nowrap align-middle"
-                :class="{
-                  'text-center':
-                    cell.column.id === 'photo' ||
-                    cell.column.id === 'isActive' ||
-                    cell.column.id === 'actions',
-                  'text-left':
-                    cell.column.id === 'name' ||
-                    cell.column.id === 'description',
-                }"
+                class="p-2 whitespace-nowrap"
               >
                 <FlexRender
                   :render="cell.column.columnDef.cell"
@@ -137,45 +113,31 @@
         </table>
       </div>
 
-      <div
-        class="flex justify-between items-center p-4 border-t border-gray-200 dark:border-gray-700"
-      >
-        <span class="text-sm text-gray-500 dark:text-gray-400">
-          Halaman {{ table.getState().pagination.pageIndex + 1 }} dari
-          {{ table.getPageCount() }}
-        </span>
-        <div class="flex space-x-2">
-          <button
-            @click="table.setPageIndex(0)"
-            :disabled="!table.getCanPreviousPage()"
-            class="btn border-gray-200 dark:border-gray-700/60 hover:border-gray-300 dark:hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Awal
-          </button>
-          <button
-            @click="table.previousPage()"
-            :disabled="!table.getCanPreviousPage()"
-            class="btn border-gray-200 dark:border-gray-700/60 hover:border-gray-300 dark:hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Sebelumnya
-          </button>
-          <button
-            @click="table.nextPage()"
-            :disabled="!table.getCanNextPage()"
-            class="btn border-gray-200 dark:border-gray-700/60 hover:border-gray-300 dark:hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Berikutnya
-          </button>
-          <button
-            @click="table.setPageIndex(table.getPageCount() - 1)"
-            :disabled="!table.getCanNextPage()"
-            class="btn border-gray-200 dark:border-gray-700/60 hover:border-gray-300 dark:hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Akhir
-          </button>
-        </div>
-      </div>
+      <div class="flex justify-between items-center p-4"></div>
     </div>
+
+    <BannerFormModal />
+    <BaseModal
+      :isOpen="isDeleteModalOpen"
+      :loading="bannerStore.isLoading"
+      @close="isDeleteModalOpen = false"
+      @confirm="confirmDelete"
+    >
+      <template #header>
+        <DialogTitle
+          as="h3"
+          class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100"
+        >
+          Hapus Banner
+        </DialogTitle>
+      </template>
+      <template #body>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Apakah Anda yakin ingin menghapus banner ini? Tindakan ini tidak dapat
+          diurungkan.
+        </p>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -191,98 +153,125 @@ import {
   FlexRender,
 } from "@tanstack/vue-table";
 
+// PERBAIKAN: Path impor ini salah
+// import BannerFormModal from "./components/BannerFormModal.vue";
+// PERBAIKAN: Ini adalah path yang benar sesuai struktur fitur kita
+import BannerFormModal from "./components/BannerFormModal.vue";
+
+import BaseModal from "@/components/modals/BaseModal.vue";
+import { DialogTitle } from "@headlessui/vue";
+
 // 1. State & Store
 const bannerStore = useBannerStore();
 const filtering = ref("");
 const sorting = ref([]);
 
-// 2. Definisi Kolom Tabel
+// State lokal untuk modal hapus
+const isDeleteModalOpen = ref(false);
+const bannerIdToDelete = ref(null);
+
+// 2. Definisi Kolom Tabel dengan Aksi yang Terhubung
 const columns = [
   {
     accessorKey: "photo",
     header: "Gambar",
     cell: ({ getValue }) =>
-      h("div", { class: "flex justify-center" }, [
-        h("img", {
-          src: getValue(),
-          class:
-            "h-12 w-20 object-cover rounded border border-gray-200 dark:border-gray-600",
-        }),
-      ]),
+      h("img", { src: getValue(), class: "h-10 w-20 object-cover rounded" }),
   },
-  {
-    accessorKey: "name",
-    header: "Nama Banner",
-    cell: ({ getValue }) =>
-      h(
-        "div",
-        { class: "font-medium text-gray-900 dark:text-gray-100" },
-        getValue()
-      ),
-  },
+  { accessorKey: "name", header: "Nama Banner" },
   {
     accessorKey: "description",
     header: "Deskripsi",
     cell: ({ getValue }) =>
-      h("div", { class: "max-w-xs" }, [
-        h(
-          "span",
-          {
-            class: "text-gray-600 dark:text-gray-300 line-clamp-2",
-            title: getValue(),
-          },
-          getValue()
-        ),
-      ]),
+      h("span", { class: "block max-w-xs truncate" }, getValue()),
   },
   {
     accessorKey: "isActive",
     header: "Status",
-    cell: ({ getValue }) => {
-      const isActive = getValue();
-      const styleClass = isActive
-        ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-500/20 dark:text-green-400 dark:border-green-500/30"
-        : "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600";
+    cell: ({ row }) => {
+      const banner = row.original;
       return h("div", { class: "flex justify-center" }, [
         h(
-          "span",
+          "label",
           {
-            class: `px-3 py-1 rounded-full text-xs font-medium border ${styleClass}`,
+            for: `toggle-${banner.id}`,
+            class: "flex items-center cursor-pointer",
           },
-          isActive ? "Aktif" : "Tidak Aktif"
+          [
+            h("div", { class: "relative" }, [
+              h("input", {
+                type: "checkbox",
+                id: `toggle-${banner.id}`,
+                class: "sr-only",
+                checked: banner.isActive,
+                onChange: () => bannerStore.toggleBannerStatus(banner),
+              }),
+              h("div", {
+                class:
+                  "block bg-gray-200 dark:bg-gray-600 w-10 h-6 rounded-full",
+              }),
+              h("div", {
+                class:
+                  "dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition",
+              }),
+            ]),
+          ]
         ),
       ]);
     },
   },
   {
     id: "actions",
-    header: "Aksi",
+    header: "Action",
     cell: ({ row }) =>
-      h("div", { class: "flex justify-center items-center space-x-3" }, [
+      h("div", { class: "flex justify-center items-center space-x-4" }, [
         h(
           "button",
           {
-            class:
-              "text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-300 font-medium text-sm transition-colors duration-200",
-            onClick: () => handleEdit(row.original.id),
-            title: "Edit Banner",
+            class: "text-gray-400 hover:text-violet-500",
+            title: "Edit",
+            // Panggil openFormModal dengan ID banner yang benar
+            onClick: () => bannerStore.openFormModal(row.original.id),
           },
-          "Edit"
+          // Anda bisa menggunakan teks atau SVG ikon di sini
+          h(
+            "svg",
+            { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
+            [
+              h("path", {
+                d: "M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z",
+              }),
+              h("path", {
+                "fill-rule": "evenodd",
+                d: "M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z",
+                "clip-rule": "evenodd",
+              }),
+            ]
+          )
         ),
         h(
           "button",
           {
-            class:
-              "text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-sm transition-colors duration-200",
-            onClick: () => handleDelete(row.original.id),
-            title: "Hapus Banner",
+            class: "text-red-400 hover:text-red-500",
+            title: "Hapus",
+            // Panggil openDeleteModal dengan ID banner yang benar
+            onClick: () => openDeleteModal(row.original.id),
           },
-          "Hapus"
+          h(
+            "svg",
+            { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
+            [
+              h("path", {
+                "fill-rule": "evenodd",
+                d: "M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z",
+                "clip-rule": "evenodd",
+              }),
+            ]
+          )
         ),
       ]),
   },
 ];
-
 // 3. Inisialisasi TanStack Table
 const table = useVueTable({
   data: bannerStore.bannerList,
@@ -308,15 +297,16 @@ const table = useVueTable({
   getSortedRowModel: getSortedRowModel(),
 });
 
-// 4. Logika Aksi
-const handleEdit = (id) => {
-  console.log("Edit banner with ID:", id);
-  // Di sini Anda bisa membuka modal edit
+// 4. Logika Aksi Hapus
+const openDeleteModal = (id) => {
+  bannerIdToDelete.value = id;
+  isDeleteModalOpen.value = true;
 };
-
-const handleDelete = (id) => {
-  console.log("Delete banner with ID:", id);
-  // Di sini Anda bisa membuka modal konfirmasi hapus
+const confirmDelete = async () => {
+  if (bannerIdToDelete.value) {
+    await bannerStore.removeBanner(bannerIdToDelete.value);
+  }
+  isDeleteModalOpen.value = false;
 };
 
 // 5. Muat data awal
@@ -324,3 +314,14 @@ onMounted(() => {
   bannerStore.fetchBanners();
 });
 </script>
+
+<style>
+/* Styling untuk toggle switch */
+input:checked ~ .dot {
+  transform: translateX(100%);
+  background-color: #f0f0f0;
+}
+input:checked + .block {
+  background-color: #6d28d9; /* Warna violet */
+}
+</style>
