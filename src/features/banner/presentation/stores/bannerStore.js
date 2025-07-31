@@ -32,8 +32,9 @@ export const useBannerStore = defineStore("banner", () => {
   const deleteBannerUseCase = new DeleteBannerUseCase(repository);
 
   async function fetchBanners(page = 1) {
-    // 2. Cek flag. Jika sudah fetch, jangan panggil API lagi.
-    if (hasFetched.value && page === 1) {
+    // PERBAIKAN: Hanya cek cache jika halamannya sama dengan yang ada di state
+    const currentPage = pagination.value?.currentPage || 0;
+    if (hasFetched.value && page === currentPage) {
       return;
     }
 
@@ -51,14 +52,22 @@ export const useBannerStore = defineStore("banner", () => {
     } else {
       banners.value = result.right.banners;
       pagination.value = result.right.pagination;
-      hasFetched.value = true; // <-- 3. Set flag setelah berhasil
+      hasFetched.value = true;
     }
+  }
+
+  // Fungsi baru untuk pindah halaman
+  async function changePage(page) {
+    // PERBAIKAN: Tidak perlu cek kondisi di sini, biarkan fetchBanners yang menangani
+    await fetchBanners(page);
   }
 
   // 4. Buat fungsi untuk memaksa fetch ulang (misal: setelah create/delete)
   async function forceRefreshBanners() {
     hasFetched.value = false;
-    await fetchBanners();
+    // PERBAIKAN: Ambil halaman saat ini atau halaman pertama
+    const currentPage = pagination.value?.currentPage || 1;
+    await fetchBanners(currentPage);
   }
 
   async function openFormModal(bannerId = null) {
@@ -98,7 +107,8 @@ export const useBannerStore = defineStore("banner", () => {
         newStatus: "success",
       });
       isFormModalOpen.value = false;
-      fetchBanners(pagination.value?.currentPage || 1);
+      // PERBAIKAN: Gunakan forceRefreshBanners
+      forceRefreshBanners();
     }
   }
 
@@ -119,26 +129,38 @@ export const useBannerStore = defineStore("banner", () => {
         newMessage: "Banner berhasil dihapus.",
         newStatus: "success",
       });
-      fetchBanners(pagination.value?.currentPage || 1);
+      // PERBAIKAN: Gunakan forceRefreshBanners
+      forceRefreshBanners();
     }
   }
 
   async function toggleBannerStatus(banner) {
-    const newStatus = banner.isActive ? 0 : 1;
+    const originalStatus = banner.isActive;
+    const bannerIndex = banners.value.findIndex((b) => b.id === banner.id);
+    if (bannerIndex === -1) return;
+
+    banners.value[bannerIndex].isActive = !originalStatus;
+
+    const newStatusApi = originalStatus ? 0 : 1;
     const result = await updateBannerStatusUseCase.execute(
       banner.id,
-      newStatus
+      newStatusApi
     );
 
     if (result.left) {
+      banners.value[bannerIndex].isActive = originalStatus; // Revert
+
       modalStore.openModal({
-        newTitle: "Error",
+        newTitle: "Update Gagal",
         newMessage: mapFailureToMessage(result.left),
         newStatus: "error",
       });
     } else {
-      // Refresh data untuk mendapatkan status terbaru
-      fetchBanners(pagination.value?.currentPage || 1);
+      modalStore.openModal({
+        newTitle: "Berhasil",
+        newMessage: "Status banner berhasil diperbarui.",
+        newStatus: "success",
+      });
     }
   }
 
@@ -156,5 +178,6 @@ export const useBannerStore = defineStore("banner", () => {
     removeBanner,
     toggleBannerStatus,
     forceRefreshBanners,
+    changePage,
   };
 });

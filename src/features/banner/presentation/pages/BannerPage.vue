@@ -64,10 +64,15 @@
               <th
                 v-for="header in headerGroup.headers"
                 :key="header.id"
-                class="p-2 whitespace-nowrap"
+                class="p-2 whitespace-nowrap text-center"
               >
                 <div
-                  class="font-semibold text-left cursor-pointer"
+                  class="font-semibold"
+                  :class="
+                    header.column.getCanSort()
+                      ? 'cursor-pointer select-none'
+                      : ''
+                  "
                   @click="header.column.getToggleSortingHandler()?.($event)"
                 >
                   <FlexRender
@@ -84,9 +89,7 @@
           <tbody
             class="text-sm divide-y divide-gray-100 dark:divide-gray-700/60"
           >
-            <tr
-              v-if="bannerStore.isLoading && bannerStore.banners.length === 0"
-            >
+            <tr v-if="isLoading && bannerList.length === 0">
               <td :colspan="columns.length" class="p-4 text-center">
                 Memuat data...
               </td>
@@ -96,12 +99,11 @@
                 Data tidak ditemukan.
               </td>
             </tr>
-
             <tr v-for="row in table.getRowModel().rows" :key="row.id">
               <td
                 v-for="cell in row.getVisibleCells()"
                 :key="cell.id"
-                class="p-2 whitespace-nowrap"
+                class="p-2 whitespace-nowrap text-center"
               >
                 <FlexRender
                   :render="cell.column.columnDef.cell"
@@ -113,13 +115,20 @@
         </table>
       </div>
 
-      <div class="flex justify-between items-center p-4"></div>
+      <div class="p-4">
+        <Pagination
+          :pagination="pagination"
+          :isLoading="isLoading"
+          @change-page="bannerStore.changePage"
+        />
+      </div>
     </div>
 
     <BannerFormModal />
+
     <BaseModal
       :isOpen="isDeleteModalOpen"
-      :loading="bannerStore.isLoading"
+      :loading="isLoading"
       @close="isDeleteModalOpen = false"
       @confirm="confirmDelete"
     >
@@ -149,81 +158,50 @@ import {
   useVueTable,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   FlexRender,
 } from "@tanstack/vue-table";
-
-// PERBAIKAN: Path impor ini salah
-// import BannerFormModal from "./components/BannerFormModal.vue";
-// PERBAIKAN: Ini adalah path yang benar sesuai struktur fitur kita
 import BannerFormModal from "./components/BannerFormModal.vue";
-
 import BaseModal from "@/components/modals/BaseModal.vue";
+import Pagination from "@/components/Pagination.vue";
+import StatusDropdown from "./components/StatusDropdown.vue";
 import { DialogTitle } from "@headlessui/vue";
 
-// 1. State & Store
 const bannerStore = useBannerStore();
-
-// 2. Gunakan storeToRefs untuk mengambil state agar tetap reaktif
-const { bannerList, isLoading } = storeToRefs(bannerStore);
+const { bannerList, isLoading, pagination } = storeToRefs(bannerStore);
 
 const filtering = ref("");
 const sorting = ref([]);
-
-// State lokal untuk modal hapus
 const isDeleteModalOpen = ref(false);
 const bannerIdToDelete = ref(null);
 
-// 2. Definisi Kolom Tabel dengan Aksi yang Terhubung
 const columns = [
   {
     accessorKey: "photo",
     header: "Gambar",
     cell: ({ getValue }) =>
-      h("img", { src: getValue(), class: "h-10 w-20 object-cover rounded" }),
+      h("img", {
+        src: getValue(),
+        class: "h-10 w-20 object-cover rounded mx-auto",
+        loading: "lazy",
+        alt: "Banner",
+      }),
   },
   { accessorKey: "name", header: "Nama Banner" },
   {
     accessorKey: "description",
     header: "Deskripsi",
     cell: ({ getValue }) =>
-      h("span", { class: "block max-w-xs truncate" }, getValue()),
+      h(
+        "span",
+        { class: "block max-w-xs truncate mx-auto text-left" },
+        getValue()
+      ),
   },
   {
     accessorKey: "isActive",
     header: "Status",
-    cell: ({ row }) => {
-      const banner = row.original;
-      return h("div", { class: "flex justify-center" }, [
-        h(
-          "label",
-          {
-            for: `toggle-${banner.id}`,
-            class: "flex items-center cursor-pointer",
-          },
-          [
-            h("div", { class: "relative" }, [
-              h("input", {
-                type: "checkbox",
-                id: `toggle-${banner.id}`,
-                class: "sr-only",
-                checked: banner.isActive,
-                onChange: () => bannerStore.toggleBannerStatus(banner),
-              }),
-              h("div", {
-                class:
-                  "block bg-gray-200 dark:bg-gray-600 w-10 h-6 rounded-full",
-              }),
-              h("div", {
-                class:
-                  "dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition",
-              }),
-            ]),
-          ]
-        ),
-      ]);
-    },
+    cell: ({ row }) => h(StatusDropdown, { banner: row.original }),
   },
   {
     id: "actions",
@@ -235,50 +213,50 @@ const columns = [
           {
             class: "text-gray-400 hover:text-violet-500",
             title: "Edit",
-            // Panggil openFormModal dengan ID banner yang benar
             onClick: () => bannerStore.openFormModal(row.original.id),
           },
-          // Anda bisa menggunakan teks atau SVG ikon di sini
-          h(
-            "svg",
-            { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
-            [
-              h("path", {
-                d: "M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z",
-              }),
-              h("path", {
-                "fill-rule": "evenodd",
-                d: "M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z",
-                "clip-rule": "evenodd",
-              }),
-            ]
-          )
+          [
+            h(
+              "svg",
+              { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
+              [
+                h("path", {
+                  d: "M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z",
+                }),
+                h("path", {
+                  "fill-rule": "evenodd",
+                  d: "M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z",
+                  "clip-rule": "evenodd",
+                }),
+              ]
+            ),
+          ]
         ),
         h(
           "button",
           {
             class: "text-red-400 hover:text-red-500",
             title: "Hapus",
-            // Panggil openDeleteModal dengan ID banner yang benar
             onClick: () => openDeleteModal(row.original.id),
           },
-          h(
-            "svg",
-            { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
-            [
-              h("path", {
-                "fill-rule": "evenodd",
-                d: "M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z",
-                "clip-rule": "evenodd",
-              }),
-            ]
-          )
+          [
+            h(
+              "svg",
+              { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
+              [
+                h("path", {
+                  "fill-rule": "evenodd",
+                  d: "M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z",
+                  "clip-rule": "evenodd",
+                }),
+              ]
+            ),
+          ]
         ),
       ]),
   },
 ];
 
-// 3. Inisialisasi TanStack Table
 const table = useVueTable({
   data: bannerList,
   columns,
@@ -299,11 +277,9 @@ const table = useVueTable({
   },
   getCoreRowModel: getCoreRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
-  getPaginationRowModel: getPaginationRowModel(),
   getSortedRowModel: getSortedRowModel(),
 });
 
-// 4. Logika Aksi Hapus
 const openDeleteModal = (id) => {
   bannerIdToDelete.value = id;
   isDeleteModalOpen.value = true;
@@ -315,19 +291,7 @@ const confirmDelete = async () => {
   isDeleteModalOpen.value = false;
 };
 
-// 5. Muat data awal
 onMounted(() => {
   bannerStore.fetchBanners();
 });
 </script>
-
-<style>
-/* Styling untuk toggle switch */
-input:checked ~ .dot {
-  transform: translateX(100%);
-  background-color: #f0f0f0;
-}
-input:checked + .block {
-  background-color: #6d28d9; /* Warna violet */
-}
-</style>

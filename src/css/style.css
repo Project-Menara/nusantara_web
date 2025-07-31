@@ -4,6 +4,19 @@
 @import "./additional-styles/flatpickr.css";
 @import "./additional-styles/utility-patterns.css" layer(components);
 
+/* PERBAIKAN: Tambahkan class paginasi di sini */
+@layer components {
+  .btn-page-nav {
+    @apply inline-flex items-center justify-center text-sm font-medium leading-5 px-3 py-2 rounded-md 
+    bg-[var(--color-violet-500)] text-white hover:bg-[var(--color-violet-600)] 
+    dark:bg-[var(--color-violet-600)] dark:hover:bg-[var(--color-violet-700)]
+    disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150;
+  }
+  .btn-page-num {
+    @apply inline-flex items-center justify-center text-sm font-medium leading-5 w-10 h-10 rounded-md border border-gray-200 dark:border-gray-700/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150;
+  }
+}
+
 @plugin "@tailwindcss/forms" {
   strategy: base;
 }

@@ -83,8 +83,10 @@ export class BannerRepository extends IBannerRepository {
 
   async updateBannerStatus(id, status) {
     try {
+      // Panggil API
       const response = await this.remoteSource.updateBannerStatus(id, status);
-      return right(mapModelToEntity(response.data));
+      // PERBAIKAN: Jika sukses, cukup kembalikan pesan suksesnya.
+      return right({ message: response.message });
     } catch (error) {
       return left(
         new ServerFailure(
