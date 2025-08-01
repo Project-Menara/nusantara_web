@@ -71,15 +71,31 @@ export const useBannerStore = defineStore("banner", () => {
   }
 
   async function openFormModal(bannerId = null) {
-    isFormModalOpen.value = true;
-    selectedBanner.value = null; // Reset
+    // Selalu reset state terlebih dahulu
+    selectedBanner.value = null;
+
     if (bannerId) {
+      // --- MODE EDIT ---
       isFormLoading.value = true;
       const result = await getBannerByIdUseCase.execute(bannerId);
       isFormLoading.value = false;
+
       if (result.right) {
         selectedBanner.value = result.right;
+        // Buka modal HANYA setelah data berhasil didapatkan
+        isFormModalOpen.value = true;
+      } else {
+        // Jika gagal mengambil data, tampilkan error dan jangan buka modal
+        modalStore.openModal({
+          newTitle: "Error",
+          newMessage: mapFailureToMessage(result.left),
+          newStatus: "error",
+        });
       }
+    } else {
+      // --- MODE TAMBAH ---
+      // Langsung buka modal karena tidak perlu mengambil data
+      isFormModalOpen.value = true;
     }
   }
 

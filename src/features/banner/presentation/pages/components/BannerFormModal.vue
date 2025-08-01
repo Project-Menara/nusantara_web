@@ -16,10 +16,7 @@
       </div>
     </template>
     <template #body>
-      <div v-if="bannerStore.isFormLoading" class="text-center p-8">
-        Memuat data...
-      </div>
-      <form v-else @submit.prevent="handleSubmit" class="mt-6 space-y-4">
+      <form @submit.prevent="handleSubmit" class="mt-6 space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label for="name" class="block text-sm font-medium mb-1"
@@ -29,9 +26,10 @@
               v-model="formData.name"
               type="text"
               id="name"
-              class="form-input w-full"
+              class="form-input w-full disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
               placeholder="Contoh: August Special Deals"
               required
+              :disabled="bannerStore.isFormLoading"
             />
           </div>
           <div>
@@ -41,7 +39,8 @@
             <select
               v-model="formData.status"
               id="status"
-              class="form-select w-full"
+              class="form-select w-full disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+              :disabled="bannerStore.isFormLoading"
             >
               <option :value="true">Aktif</option>
               <option :value="false">Tidak Aktif</option>
@@ -56,16 +55,22 @@
             v-model="formData.description"
             id="description"
             rows="4"
-            class="form-textarea w-full"
+            class="form-textarea w-full disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
             placeholder="Contoh: Bolu adalah produk kue..."
             required
+            :disabled="bannerStore.isFormLoading"
           ></textarea>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Gambar</label>
           <label
             for="image-upload"
-            class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+            class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg bg-gray-50 dark:bg-gray-700"
+            :class="
+              bannerStore.isFormLoading
+                ? 'cursor-not-allowed bg-gray-100'
+                : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600'
+            "
           >
             <div class="flex flex-col items-center justify-center pt-5 pb-6">
               <svg
@@ -97,6 +102,7 @@
               type="file"
               class="hidden"
               accept="image/png, image/jpeg"
+              :disabled="bannerStore.isFormLoading"
             />
           </label>
           <div v-if="previewUrl" class="mt-2">
@@ -133,7 +139,7 @@
           }}
         </button>
         <span
-          v-if="isButtonDisabled"
+          v-if="isButtonDisabled && !bannerStore.isFormLoading"
           class="absolute bottom-full right-0 mb-2 w-max px-2 py-1 bg-gray-700 text-white text-xs rounded-md shadow-lg invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-300"
         >
           {{ tooltipMessage }}
@@ -152,59 +158,57 @@ import { DialogTitle } from "@headlessui/vue";
 const bannerStore = useBannerStore();
 const isEditMode = computed(() => !!bannerStore.selectedBanner);
 
-// State lokal untuk form
 const formData = ref({});
 const selectedFile = ref(null);
 const previewUrl = ref("");
-
-// PERUBAHAN 1: Buat state untuk menyimpan data asli saat edit
 const originalData = ref(null);
 
+// PERBAIKAN: Pantau status buka/tutup modal, bukan data banner
 watch(
-  () => bannerStore.selectedBanner,
-  (banner) => {
-    if (banner) {
-      // Mode Edit: Isi form dan simpan salinan data asli
-      const dataToEdit = {
-        name: banner.name,
-        description: banner.description,
-        status: banner.isActive,
-      };
-      formData.value = { ...dataToEdit };
-      originalData.value = { ...dataToEdit }; // <-- Simpan data asli
-      previewUrl.value = banner.photo;
-    } else {
-      // Mode Tambah: Reset form
-      formData.value = { name: "", description: "", status: true };
-      originalData.value = null; // <-- Reset data asli
-      previewUrl.value = "";
+  () => bannerStore.isFormModalOpen,
+  (isOpen) => {
+    // Jalankan logika HANYA saat modal dibuka
+    if (isOpen) {
+      const banner = bannerStore.selectedBanner;
+      if (banner) {
+        // Mode Edit: Isi form dengan data yang sudah di-fetch oleh store
+        const dataToEdit = {
+          name: banner.name,
+          description: banner.description,
+          status: banner.isActive,
+        };
+        formData.value = { ...dataToEdit };
+        originalData.value = { ...dataToEdit };
+        previewUrl.value = banner.photo;
+      } else {
+        // Mode Tambah: Reset form ke kondisi awal
+        formData.value = { name: "", description: "", status: true };
+        originalData.value = null;
+        previewUrl.value = "";
+      }
+      selectedFile.value = null;
     }
-    selectedFile.value = null;
-  }
+  },
+  // Tambahkan opsi ini agar watch berjalan saat komponen pertama kali dibuat
+  { immediate: true }
 );
 
-// PERUBAHAN 2: Buat computed property untuk menonaktifkan tombol
 const isButtonDisabled = computed(() => {
-  // Selalu nonaktifkan jika sedang loading
   if (bannerStore.isFormLoading) {
     return true;
   }
-
   if (isEditMode.value) {
-    // Mode Edit: Cek apakah ada perubahan data atau file baru
     const hasDataChanged =
       JSON.stringify(formData.value) !== JSON.stringify(originalData.value);
     const hasNewFile = !!selectedFile.value;
-    return !hasDataChanged && !hasNewFile; // Nonaktifkan jika TIDAK ada perubahan DAN TIDAK ada file baru
+    return !hasDataChanged && !hasNewFile;
   } else {
-    // Mode Tambah: Cek apakah semua field yang required sudah diisi
     return (
       !formData.value.name || !formData.value.description || !selectedFile.value
     );
   }
 });
 
-// PERBAIKAN: Buat pesan tooltip yang dinamis
 const tooltipMessage = computed(() => {
   if (isEditMode.value) {
     return "Lakukan perubahan terlebih dahulu.";
@@ -222,7 +226,6 @@ const handleFileChange = (event) => {
 };
 
 const handleSubmit = () => {
-  // PERUBAHAN 3: Tambahkan pengecekan sebelum submit
   if (isButtonDisabled.value) return;
 
   const data = new FormData();
