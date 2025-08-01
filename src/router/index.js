@@ -35,7 +35,7 @@ const routes = [
       // --- Group Utama ---
       {
         path: "product-types",
-        component: Dashboard, // Placeholder
+        component: () => import("@/features/type-product/presentation/pages/TypeProductPage.vue"),
         meta: { roles: ["superadmin"] },
       },
       {
