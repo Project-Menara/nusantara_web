@@ -70,14 +70,23 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
 
     if (id) {
       // --- Mode Edit ---
+
+      // Buka Form
+      isFormModalOpen.value = true;
+
+      // Tampilkan loading sebelum mengambil data
       isFormLoading.value = true;
+
       const result = await getTypeProductByIdUseCase.execute(id);
+
+      // Matikan Loading
       isFormLoading.value = false;
 
       if (result.right) {
         selectedTypeProduct.value = result.right;
-        isFormModalOpen.value = true; // Buka modal SETELAH data siap
+        // isFormModalOpen.value = true; // Buka modal SETELAH data siap
       } else {
+        isFormModalOpen.value = false;
         modalStore.openModal({
           newTitle: "Error",
           newMessage: mapFailureToMessage(result.left),

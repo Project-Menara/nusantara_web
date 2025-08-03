@@ -114,6 +114,7 @@
       >
         Batal
       </button>
+
       <div class="relative inline-block group">
         <button
           :disabled="isButtonDisabled"
@@ -122,30 +123,17 @@
           :class="{ 'pointer-events-none': isButtonDisabled }"
         >
           <span v-if="typeProductStore.isFormLoading" class="flex items-center">
-            <svg
-              class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
             Menyimpan...
           </span>
           <span v-else>{{ isEditMode ? "Simpan Perubahan" : "Tambah" }}</span>
         </button>
+
+        <span
+          v-if="isButtonDisabled && !typeProductStore.isFormLoading"
+          class="absolute bottom-full right-0 mb-2 w-max px-2 py-1 bg-gray-700 text-white text-xs rounded-md shadow-lg invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-300"
+        >
+          {{ tooltipMessage }}
+        </span>
       </div>
     </template>
   </BaseModal>
@@ -158,30 +146,41 @@ import BaseModal from "@/components/modals/BaseModal.vue";
 import { DialogTitle } from "@headlessui/vue";
 
 const typeProductStore = useTypeProductStore();
-const isEditMode = computed(() => !!typeProductStore.selectedTypeProduct);
+
+// ✅ isEditMode sekarang bisa ditentukan langsung dari keberadaan item yang dipilih
+const isEditMode = computed(() => !!typeProductStore.selectedTypeProduct?.id);
 
 const formData = ref({});
 const selectedFile = ref(null);
 const previewUrl = ref("");
 const originalData = ref(null);
 
+// ✅ PERBAIKAN UTAMA: Pantau 'selectedTypeProduct' untuk mengisi form
+watch(
+  () => typeProductStore.selectedTypeProduct,
+  (newItem) => {
+    if (newItem) {
+      // --- Mode Edit: Berjalan HANYA SETELAH data datang ---
+      const dataToEdit = { name: newItem.name, status: newItem.isActive };
+      formData.value = { ...dataToEdit };
+      originalData.value = { ...dataToEdit };
+      previewUrl.value = newItem.image;
+      selectedFile.value = null;
+    }
+  },
+  { deep: true } // Gunakan deep watcher jika diperlukan
+);
+
+// ✅ Tambah watch terpisah untuk mereset form saat modal dibuka untuk "Tambah"
 watch(
   () => typeProductStore.isFormModalOpen,
-  (isOpen) => {
-    if (isOpen) {
-      const item = typeProductStore.selectedTypeProduct;
-      if (item) {
-        // Mode Edit
-        const dataToEdit = { name: item.name, status: item.isActive };
-        formData.value = { ...dataToEdit };
-        originalData.value = { ...dataToEdit };
-        previewUrl.value = item.image;
-      } else {
-        // Mode Tambah
-        formData.value = { name: "", status: true };
-        originalData.value = null;
-        previewUrl.value = "";
-      }
+  (isOpen, wasOpen) => {
+    // Hanya reset jika modal baru saja dibuka dan ini BUKAN mode edit
+    if (isOpen && !wasOpen && !typeProductStore.selectedTypeProduct) {
+      // --- Mode Tambah ---
+      formData.value = { name: "", status: true };
+      originalData.value = null;
+      previewUrl.value = "";
       selectedFile.value = null;
     }
   }
