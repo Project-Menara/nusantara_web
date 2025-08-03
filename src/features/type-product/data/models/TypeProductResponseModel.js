@@ -1,16 +1,6 @@
+// TypeProductResponseModel.js
 import { PaginationEntity } from "../../domain/entities/PaginationEntity";
-export class TypeProductModel {
-  constructor({ id, name, image, status }) {
-    this.id = id;
-    this.name = name;
-    this.image = image;
-    this.status = status;
-  }
-
-  static fromJSON(json) {
-    return new TypeProductModel(json);
-  }
-}
+import { TypeProductEntity } from "../../domain/entities/TypeProductEntity";
 
 export class TypeProductResponseModel {
   constructor({ typeProducts, pagination }) {
@@ -19,10 +9,26 @@ export class TypeProductResponseModel {
   }
 
   static fromJSON(json) {
-    const typeProducts = json.data.map((tpJson) =>
-      TypeProductModel.fromJSON(tpJson)
+    const typeProducts = json.data.map(
+      (item) =>
+        // Langsung map ke TypeProductEntity untuk penyederhanaan
+        new TypeProductEntity({
+          id: item.id,
+          name: item.name,
+          image: item.image,
+          isActive: item.status === 1,
+        })
     );
-    const pagination = new PaginationEntity(json.pagination);
+
+    // ✅ PERBAIKAN UTAMA DI SINI
+    // Lakukan mapping dari snake_case (API) ke camelCase (Entity)
+    const pagination = new PaginationEntity({
+      currentPage: json.pagination.current_page,
+      totalPages: json.pagination.total_pages,
+      totalData: json.pagination.total_data,
+      perPage: json.pagination.per_page,
+    });
+
     return new TypeProductResponseModel({ typeProducts, pagination });
   }
 }

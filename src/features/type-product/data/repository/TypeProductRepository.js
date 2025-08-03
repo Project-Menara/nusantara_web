@@ -1,20 +1,9 @@
+// Path: src/features/type-product/data/repository/TypeProductRepository.js
 import { ITypeProductRepository } from "../../domain/repository/ITypeProductRepository";
 import { TypeProductEntity } from "../../domain/entities/TypeProductEntity";
 import { left, right, ServerFailure } from "@/core/error/failure.js";
-import {
-  TypeProductResponseModel,
-  TypeProductModel,
-} from "../models/TypeProductResponseModel";
+import { TypeProductResponseModel } from "../models/TypeProductResponseModel";
 import { TypeProductRemoteSource } from "../source/TypeProductRemoteSource";
-
-const mapModelToEntity = (model) => {
-  return new TypeProductEntity({
-    id: model.id,
-    name: model.name,
-    image: model.image,
-    isActive: model.status === 1,
-  });
-};
 
 export class TypeProductRepository extends ITypeProductRepository {
   constructor() {
@@ -22,12 +11,12 @@ export class TypeProductRepository extends ITypeProductRepository {
     this.remoteSource = new TypeProductRemoteSource();
   }
 
-  async getTypeProducts(page = 1) {
+  async getTypeProducts(page = 1, search = "") {
     try {
-      const response = await this.remoteSource.getTypeProducts(page);
+      const response = await this.remoteSource.getTypeProducts(page, search);
       const model = TypeProductResponseModel.fromJSON(response);
       return right({
-        typeProducts: model.typeProducts.map(mapModelToEntity),
+        typeProducts: model.typeProducts,
         pagination: model.pagination,
       });
     } catch (error) {
@@ -42,7 +31,14 @@ export class TypeProductRepository extends ITypeProductRepository {
   async createTypeProduct(formData) {
     try {
       const response = await this.remoteSource.createTypeProduct(formData);
-      return right(mapModelToEntity(response.data));
+      // ✅ Perbaikan: Mapping satu objek 'response.data' ke TypeProductEntity
+      const newEntity = new TypeProductEntity({
+        id: response.data.id,
+        name: response.data.name,
+        image: response.data.image,
+        isActive: response.data.status === 1,
+      });
+      return right(newEntity);
     } catch (error) {
       return left(
         new ServerFailure(
@@ -55,7 +51,14 @@ export class TypeProductRepository extends ITypeProductRepository {
   async getTypeProductById(id) {
     try {
       const response = await this.remoteSource.getTypeProductById(id);
-      return right(mapModelToEntity(response.data));
+      // ✅ Perbaikan: Mapping satu objek 'response.data' ke TypeProductEntity
+      const entity = new TypeProductEntity({
+        id: response.data.id,
+        name: response.data.name,
+        image: response.data.image,
+        isActive: response.data.status === 1,
+      });
+      return right(entity);
     } catch (error) {
       return left(
         new ServerFailure(
@@ -68,7 +71,14 @@ export class TypeProductRepository extends ITypeProductRepository {
   async updateTypeProduct(id, formData) {
     try {
       const response = await this.remoteSource.updateTypeProduct(id, formData);
-      return right(mapModelToEntity(response.data));
+      // ✅ Perbaikan: Mapping satu objek 'response.data' ke TypeProductEntity
+      const updatedEntity = new TypeProductEntity({
+        id: response.data.id,
+        name: response.data.name,
+        image: response.data.image,
+        isActive: response.data.status === 1,
+      });
+      return right(updatedEntity);
     } catch (error) {
       return left(
         new ServerFailure(

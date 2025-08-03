@@ -1,3 +1,4 @@
+<!-- TypeProductPage -->
 <template>
   <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
     <div class="sm:flex sm:justify-between sm:items-center mb-5">
@@ -25,7 +26,31 @@
     <div
       class="bg-white dark:bg-gray-800 shadow-lg rounded-sm border border-gray-200 dark:border-gray-700 relative"
     >
-      <header class="px-5 py-4"></header>
+      <header class="px-5 py-4">
+        <div class="relative">
+          <input
+            v-model="localSearchQuery"
+            type="search"
+            placeholder="Cari tipe produk..."
+            class="form-input w-full pl-9"
+          />
+          <div
+            class="absolute inset-0 right-auto flex items-center pointer-events-none"
+          >
+            <svg
+              class="w-4 h-4 fill-current text-gray-400 dark:text-gray-500 ml-3"
+              viewBox="0 0 16 16"
+            >
+              <path
+                d="M7 14c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zM7 2C4.243 2 2 4.243 2 7s2.243 5 5 5 5-2.243 5-5-2.243-5-5-5z"
+              />
+              <path
+                d="M15.707 14.293L13.314 11.9a8.019 8.019 0 01-1.414 1.414l2.393 2.393a.997.997 0 001.414 0 .999.999 0 000-1.414z"
+              />
+            </svg>
+          </div>
+        </div>
+      </header>
       <div class="overflow-x-auto">
         <table class="table-auto w-full dark:text-gray-300">
           <thead
@@ -123,7 +148,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, h } from "vue";
+import { ref, onMounted, watch, h } from "vue";
 import { useTypeProductStore } from "@/features/type-product/presentation/stores/typeProductStore";
 import { storeToRefs } from "pinia";
 import {
@@ -147,6 +172,18 @@ const isDeleteModalOpen = ref(false);
 const itemToDeleteId = ref(null);
 const filtering = ref("");
 const sorting = ref([]);
+
+// ✅ State dan Logika untuk Debouncing
+const localSearchQuery = ref("");
+let debounceTimer = null;
+
+watch(localSearchQuery, (newQuery) => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    // ✅ Panggil store dengan halaman 1 untuk memulai pencarian baru
+    typeProductStore.fetchTypeProducts(1, newQuery);
+  }, 500); // Jeda 500ms
+});
 
 const columns = [
   {

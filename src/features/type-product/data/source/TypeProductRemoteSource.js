@@ -1,9 +1,20 @@
+// Path: src/features/type-product/data/source/TypeProductRemoteSource.js
 import apiClient from "@/lib/apiClient.js";
 
 export class TypeProductRemoteSource {
-  async getTypeProducts(page = 1) {
+  async getTypeProducts(page = 1, search = "") {
     try {
-      const response = await apiClient.get(`/type-product?page=${page}`);
+      // ✅ Membangun parameter URL
+      const params = new URLSearchParams({
+        page: page,
+      });
+
+      // ✅ Menambahkan parameter search hanya jika ada isinya
+      if (search) {
+        params.append("search", search);
+      }
+
+      const response = await apiClient.get(`/type-product?${params.toString()}`);
       return response.data;
     } catch (error) {
       throw error;

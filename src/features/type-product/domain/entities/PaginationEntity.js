@@ -1,3 +1,4 @@
+// PaginationEntity.js
 export class PaginationEntity {
   constructor({ currentPage, perPage, totalData, totalPages }) {
     this.currentPage = currentPage;

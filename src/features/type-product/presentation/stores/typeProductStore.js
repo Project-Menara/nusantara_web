@@ -22,6 +22,7 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
   const isFormModalOpen = ref(false);
   const selectedTypeProduct = ref(null);
   const isFormLoading = ref(false);
+  const searchQuery = ref("");
   const typeProductList = computed(() => typeProducts.value);
 
   // Dependencies
@@ -37,9 +38,15 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
   const deleteTypeProductUseCase = new DeleteTypeProductUseCase(repository);
 
   // Actions
-  async function fetchTypeProducts(page = 1) {
+  async function fetchTypeProducts(page = 1, search = "") {
+    // ✅ Langsung set state pencarian agar selalu sinkron
+    searchQuery.value = search;
+
     isLoading.value = true;
-    const result = await getTypeProductsUseCase.execute(page);
+    const result = await getTypeProductsUseCase.execute(
+      page,
+      searchQuery.value
+    );
     isLoading.value = false;
     if (result.left) {
       modalStore.openModal({
@@ -54,7 +61,8 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
   }
 
   async function changePage(page) {
-    await fetchTypeProducts(page);
+    // ✅ PERBAIKAN: Kirim state searchQuery yang sedang aktif
+    await fetchTypeProducts(page, searchQuery.value);
   }
 
   async function openFormModal(id = null) {
@@ -92,6 +100,7 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
       ? [selectedTypeProduct.value.id, formData]
       : [formData];
     const result = await useCase.execute(...params);
+
     isFormLoading.value = false;
 
     if (result.left) {
@@ -110,7 +119,8 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
         newStatus: "success",
       });
       isFormModalOpen.value = false;
-      fetchTypeProducts(pagination.value?.currentPage || 1);
+      // ✅ PERBAIKAN: Kirim state searchQuery yang sedang aktif
+      fetchTypeProducts(pagination.value?.currentPage || 1, searchQuery.value);
     }
   }
 
@@ -131,7 +141,8 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
         newMessage: "Tipe Produk berhasil dihapus.",
         newStatus: "success",
       });
-      fetchTypeProducts(pagination.value?.currentPage || 1);
+      // ✅ PERBAIKAN: Kirim state searchQuery yang sedang aktif
+      fetchTypeProducts(pagination.value?.currentPage || 1, searchQuery.value);
     }
   }
 
@@ -161,7 +172,7 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
         newMessage: "Status Tipe Produk berhasil diupdate.",
         newStatus: "success",
       });
-      fetchTypeProducts(pagination.value?.currentPage || 1);
+      fetchTypeProducts(pagination.value?.currentPage || 1, searchQuery.value);
     }
   }
 
@@ -170,6 +181,7 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
     pagination,
     isLoading,
     isFormModalOpen,
+    searchQuery,
     selectedTypeProduct,
     isFormLoading,
     typeProductList,
