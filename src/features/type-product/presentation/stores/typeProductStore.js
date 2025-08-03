@@ -25,6 +25,9 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
   const searchQuery = ref("");
   const typeProductList = computed(() => typeProducts.value);
 
+  // ✅ 1. Tambahkan state untuk melacak ID item yang sedang loading
+  const statusLoadingId = ref(null);
+
   // Dependencies
   const modalStore = useModalStore();
   const repository = new TypeProductRepository();
@@ -156,25 +159,34 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
   }
 
   async function toggleStatus(item) {
-    const originalStatus = item.isActive;
-    const newStatus = originalStatus ? 0 : 1;
-    const itemIndex = typeProducts.value.findIndex((tp) => tp.id === item.id);
-    if (itemIndex !== -1)
-      typeProducts.value[itemIndex].isActive = !originalStatus;
+    // ✅ 1. Set ID item yang sedang loading
+    statusLoadingId.value = item.id;
+
+   // ✅ 2. Tentukan status baru langsung dari 'item' yang diterima
+    const newStatus = item.isActive ? 0 : 1;
+
+    // const itemIndex = typeProducts.value.findIndex((tp) => tp.id === item.id);
+    // if (itemIndex !== -1)
+    //   typeProducts.value[itemIndex].isActive = !originalStatus;
 
     const result = await updateTypeProductStatusUseCase.execute(
       item.id,
       newStatus
     );
 
+    // ✅ 3. Reset ID loading setelah API selesai, baik berhasil maupun gagal
+    statusLoadingId.value = null;
+
     if (result.left) {
-      if (itemIndex !== -1)
-        typeProducts.value[itemIndex].isActive = originalStatus;
+      // if (itemIndex !== -1)
+      //   typeProducts.value[itemIndex].isActive = originalStatus;
       modalStore.openModal({
         newTitle: "Error",
         newMessage: mapFailureToMessage(result.left),
         newStatus: "error",
       });
+      // ✅ 4. Panggil fetchTypeProducts untuk revert tampilan jika gagal
+      fetchTypeProducts(pagination.value?.currentPage || 1, searchQuery.value);
     } else {
       modalStore.openModal({
         newTitle: "Berhasil",
@@ -190,6 +202,7 @@ export const useTypeProductStore = defineStore("typeProduct", () => {
     pagination,
     isLoading,
     isFormModalOpen,
+    statusLoadingId,
     searchQuery,
     selectedTypeProduct,
     isFormLoading,

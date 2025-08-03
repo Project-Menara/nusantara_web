@@ -165,7 +165,7 @@ import StatusDropdown from "@/components/StatusToggleDropdown.vue";
 import { DialogTitle } from "@headlessui/vue";
 
 const typeProductStore = useTypeProductStore();
-const { typeProductList, isLoading, pagination } =
+const { typeProductList, isLoading, pagination, statusLoadingId } =
   storeToRefs(typeProductStore);
 
 const isDeleteModalOpen = ref(false);
@@ -203,6 +203,9 @@ const columns = [
     cell: ({ row }) =>
       h(StatusDropdown, {
         item: row.original,
+        // ✅ 2. Kirim 'isLoading' sebagai prop
+        //    Nilainya true HANYA jika ID baris ini sama dengan ID yang sedang loading
+        isLoading: statusLoadingId.value === row.original.id,
         onToggle: () => typeProductStore.toggleStatus(row.original),
       }),
   },
