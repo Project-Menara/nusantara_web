@@ -1,20 +1,9 @@
+// BannerRepository.js
 import { IBannerRepository } from "../../domain/repository/IBannerRepository";
-import { BannerEntity } from "../../domain/entities/BannerEntity";
-import { PaginationEntity } from "../../domain/entities/PaginationEntity";
 import { left, right, ServerFailure } from "@/core/error/failure";
 import { BannerResponseModel } from "../models/BannerResponseModel";
 import { BannerRemoteSource } from "../source/BannerRemoteSource";
-
-// Helper untuk mapping model ke entity, agar tidak berulang
-const mapModelToEntity = (model) => {
-  return new BannerEntity({
-    id: model.id,
-    name: model.name,
-    photo: model.photo,
-    description: model.description,
-    isActive: model.status === 1,
-  });
-};
+import { BannerEntity } from "../../../banner/domain/entities/BannerEntity";
 
 export class BannerRepository extends IBannerRepository {
   constructor() {
@@ -22,18 +11,16 @@ export class BannerRepository extends IBannerRepository {
     this.remoteSource = new BannerRemoteSource();
   }
 
-  async getBanners(page = 1) {
+  async getBanners(page = 1, search = "") {
     try {
-      const response = await this.remoteSource.getBanners(page);
-      const bannerResponseModel = BannerResponseModel.fromJSON(response);
+      const response = await this.remoteSource.getBanners(page, search);
+      const model = BannerResponseModel.fromJSON(response);
 
-      const banners = bannerResponseModel.banners.map((model) =>
-        mapModelToEntity(model)
-      );
-
-      const pagination = new PaginationEntity(bannerResponseModel.pagination);
-
-      return right({ banners, pagination });
+      // ✅ Langsung return hasil dari model yang sudah bersih
+      return right({
+        banners: model.banners,
+        pagination: model.pagination,
+      });
     } catch (error) {
       return left(
         new ServerFailure(
@@ -45,7 +32,14 @@ export class BannerRepository extends IBannerRepository {
   async createBanner(formData) {
     try {
       const response = await this.remoteSource.createBanner(formData);
-      return right(mapModelToEntity(response.data));
+      const newEntity = new BannerEntity({
+        id: response.data.id,
+        name: response.data.name,
+        photo: response.data.photo,
+        description: response.data.description,
+        isActive: response.data.status === 1,
+      });
+      return right(newEntity);
     } catch (error) {
       return left(
         new ServerFailure(
@@ -58,7 +52,15 @@ export class BannerRepository extends IBannerRepository {
   async getBannerById(id) {
     try {
       const response = await this.remoteSource.getBannerById(id);
-      return right(mapModelToEntity(response.data));
+      const entity = new BannerEntity({
+        id: response.data.id,
+        name: response.data.name,
+        photo: response.data.photo,
+        description: response.data.description,
+        isActive: response.data.status === 1,
+      });
+      console.log("Fetched Banner Entity:", entity);
+      return right(entity);
     } catch (error) {
       return left(
         new ServerFailure(
@@ -71,7 +73,15 @@ export class BannerRepository extends IBannerRepository {
   async updateBanner(id, formData) {
     try {
       const response = await this.remoteSource.updateBanner(id, formData);
-      return right(mapModelToEntity(response.data));
+      const updatedEntity = new BannerEntity({
+        id: response.data.id,
+        name: response.data.name,
+        photo: response.data.photo,
+        description: response.data.description,
+        isActive: response.data.status === 1,
+      });
+      console.log("Updated Banner Entity:", updatedEntity);
+      return right(updatedEntity);
     } catch (error) {
       return left(
         new ServerFailure(

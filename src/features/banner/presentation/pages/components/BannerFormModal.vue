@@ -156,41 +156,45 @@ import BaseModal from "@/components/modals/BaseModal.vue";
 import { DialogTitle } from "@headlessui/vue";
 
 const bannerStore = useBannerStore();
-const isEditMode = computed(() => !!bannerStore.selectedBanner);
+const isEditMode = computed(() => !!bannerStore.selectedBanner?.id);
 
 const formData = ref({});
 const selectedFile = ref(null);
 const previewUrl = ref("");
 const originalData = ref(null);
 
-// PERBAIKAN: Pantau status buka/tutup modal, bukan data banner
+// ✅ PERBAIKAN: Gunakan pola 'watch' ganda yang lebih robust
 watch(
-  () => bannerStore.isFormModalOpen,
-  (isOpen) => {
-    // Jalankan logika HANYA saat modal dibuka
-    if (isOpen) {
-      const banner = bannerStore.selectedBanner;
-      if (banner) {
-        // Mode Edit: Isi form dengan data yang sudah di-fetch oleh store
-        const dataToEdit = {
-          name: banner.name,
-          description: banner.description,
-          status: banner.isActive,
-        };
-        formData.value = { ...dataToEdit };
-        originalData.value = { ...dataToEdit };
-        previewUrl.value = banner.photo;
-      } else {
-        // Mode Tambah: Reset form ke kondisi awal
-        formData.value = { name: "", description: "", status: true };
-        originalData.value = null;
-        previewUrl.value = "";
-      }
+  () => bannerStore.selectedBanner,
+  (newBanner) => {
+    if (newBanner) {
+      // Mode Edit: Berjalan HANYA SETELAH data datang
+      const dataToEdit = {
+        name: newBanner.name,
+        description: newBanner.description,
+        status: newBanner.isActive,
+      };
+      formData.value = { ...dataToEdit };
+      originalData.value = { ...dataToEdit };
+      previewUrl.value = newBanner.photo;
       selectedFile.value = null;
     }
   },
-  // Tambahkan opsi ini agar watch berjalan saat komponen pertama kali dibuat
-  { immediate: true }
+  { deep: true }
+);
+
+watch(
+  () => bannerStore.isFormModalOpen,
+  (isOpen, wasOpen) => {
+    // Hanya reset jika modal baru saja dibuka dan ini BUKAN mode edit
+    if (isOpen && !wasOpen && !bannerStore.selectedBanner) {
+      // Mode Tambah
+      formData.value = { name: "", description: "", status: true };
+      originalData.value = null;
+      previewUrl.value = "";
+      selectedFile.value = null;
+    }
+  }
 );
 
 const isButtonDisabled = computed(() => {
@@ -231,9 +235,17 @@ const handleSubmit = () => {
   const data = new FormData();
   data.append("name", formData.value.name);
   data.append("description", formData.value.description);
-  data.append("status", formData.value.status ? 1 : 0);
+
+  if (!isEditMode.value) {
+    data.append("status", formData.value.status ? 1 : 0);
+  }
+
   if (selectedFile.value) {
     data.append("image", selectedFile.value);
+  }
+
+  if (isEditMode.value) {
+    data.append("_method", "PUT");
   }
 
   bannerStore.submitBanner(data);

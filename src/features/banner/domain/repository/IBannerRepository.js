@@ -1,5 +1,5 @@
 export class IBannerRepository {
-  async getBanners(page = 1) {
+  async getBanners(page = 1, search = "") {
     throw new Error("METHOD_NOT_IMPLEMENTED");
   }
   async createBanner(formData) {

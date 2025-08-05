@@ -5,7 +5,7 @@
       <MenuButton
         :class="buttonClass"
         :disabled="props.isLoading"
-        class="inline-flex justify-center items-center w-28 rounded-md border px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-violet-500 disabled:opacity-75 disabled:cursor-not-allowed"
+        class="inline-flex justify-center items-center w-32 rounded-md border px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-violet-500 disabled:opacity-75 disabled:cursor-not-allowed"
       >
         <div
           v-if="props.isLoading"
@@ -48,7 +48,7 @@
       leave-to-class="transform opacity-0 scale-95"
     >
       <MenuItems
-        class="absolute right-0 z-10 mt-2 w-28 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+        class="absolute right-0 z-10 mt-2 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
       >
         <div class="py-1">
           <MenuItem v-if="!props.item.isActive" v-slot="{ active }">

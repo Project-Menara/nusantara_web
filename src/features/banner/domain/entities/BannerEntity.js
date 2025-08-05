@@ -1,3 +1,4 @@
+// BannerEntity.js
 export class BannerEntity {
   constructor({ id, name, photo, description, isActive }) {
     this.id = id;

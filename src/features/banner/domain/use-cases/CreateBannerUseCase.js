@@ -1,3 +1,4 @@
+// CreateBannerUseCase.js
 export class CreateBannerUseCase {
   constructor(repository) {
     this.repository = repository;

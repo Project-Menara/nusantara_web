@@ -30,7 +30,7 @@
         <div class="relative">
           <input
             type="search"
-            v-model="filtering"
+            v-model="localSearchQuery"
             class="form-input w-full pl-9"
             placeholder="Cari berdasarkan nama banner..."
           />
@@ -151,29 +151,33 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, h } from "vue";
+import { ref, onMounted, watch, h } from "vue";
 import { useBannerStore } from "@/features/banner/presentation/stores/bannerStore";
 import { storeToRefs } from "pinia";
-import {
-  useVueTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  FlexRender,
-} from "@tanstack/vue-table";
+import { useVueTable, getCoreRowModel, FlexRender } from "@tanstack/vue-table";
 import BannerFormModal from "./components/BannerFormModal.vue";
 import BaseModal from "@/components/modals/BaseModal.vue";
 import Pagination from "@/components/Pagination.vue";
-import StatusDropdown from "./components/StatusDropdown.vue";
+import StatusDropdown from "@/components/StatusToggleDropdown.vue";
 import { DialogTitle } from "@headlessui/vue";
 
 const bannerStore = useBannerStore();
-const { bannerList, isLoading, pagination } = storeToRefs(bannerStore);
+const { bannerList, isLoading, pagination, statusLoadingId } =
+  storeToRefs(bannerStore);
 
-const filtering = ref("");
-const sorting = ref([]);
 const isDeleteModalOpen = ref(false);
 const bannerIdToDelete = ref(null);
+
+// ✅ TAMBAHKAN LOGIKA DEBOUNCING BARU
+const localSearchQuery = ref("");
+let debounceTimer = null;
+
+watch(localSearchQuery, (newQuery) => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    bannerStore.fetchBanners(1, newQuery);
+  }, 300);
+});
 
 const columns = [
   {
@@ -201,7 +205,14 @@ const columns = [
   {
     accessorKey: "isActive",
     header: "Status",
-    cell: ({ row }) => h(StatusDropdown, { banner: row.original }),
+    // ✅ Ubah 'banner' menjadi 'item' agar komponen StatusDropdown bisa dipakai ulang
+    // ✅ Teruskan prop 'isLoading'
+    cell: ({ row }) =>
+      h(StatusDropdown, {
+        item: row.original,
+        isLoading: statusLoadingId.value === row.original.id,
+        onToggle: () => bannerStore.toggleBannerStatus(row.original),
+      }),
   },
   {
     id: "actions",
@@ -260,24 +271,7 @@ const columns = [
 const table = useVueTable({
   data: bannerList,
   columns,
-  state: {
-    get globalFilter() {
-      return filtering.value;
-    },
-    get sorting() {
-      return sorting.value;
-    },
-  },
-  onGlobalFilterChange: (val) => {
-    filtering.value = val;
-  },
-  onSortingChange: (updater) => {
-    sorting.value =
-      typeof updater === "function" ? updater(sorting.value) : updater;
-  },
   getCoreRowModel: getCoreRowModel(),
-  getFilteredRowModel: getFilteredRowModel(),
-  getSortedRowModel: getSortedRowModel(),
 });
 
 const openDeleteModal = (id) => {

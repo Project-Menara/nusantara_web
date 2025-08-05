@@ -1,3 +1,4 @@
+// bannerStore.js
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useModalStore } from "@/stores/modalStore";
@@ -14,12 +15,14 @@ export const useBannerStore = defineStore("banner", () => {
   const banners = ref([]);
   const pagination = ref(null);
   const isLoading = ref(false);
+  const searchQuery = ref("");
   // flag caching
   const hasFetched = ref(false);
 
   const isFormModalOpen = ref(false);
   const selectedBanner = ref(null);
   const isFormLoading = ref(false);
+  const statusLoadingId = ref(null);
   const bannerList = computed(() => banners.value);
 
   const modalStore = useModalStore();
@@ -31,43 +34,28 @@ export const useBannerStore = defineStore("banner", () => {
   const updateBannerStatusUseCase = new UpdateBannerStatusUseCase(repository);
   const deleteBannerUseCase = new DeleteBannerUseCase(repository);
 
-  async function fetchBanners(page = 1) {
-    // PERBAIKAN: Hanya cek cache jika halamannya sama dengan yang ada di state
-    const currentPage = pagination.value?.currentPage || 0;
-    if (hasFetched.value && page === currentPage) {
-      return;
-    }
-
+  async function fetchBanners(page = 1, search = "") {
+    searchQuery.value = search;
     isLoading.value = true;
-    const result = await getBannersUseCase.execute(page);
+    const result = await getBannersUseCase.execute(page, searchQuery.value);
     isLoading.value = false;
 
-    if (result.left) {
+    if (result.right) {
+      banners.value = result.right.banners;
+      pagination.value = result.right.pagination;
+    } else {
       const message = mapFailureToMessage(result.left);
       modalStore.openModal({
         newTitle: "Error",
         newMessage: message,
         newStatus: "error",
       });
-    } else {
-      banners.value = result.right.banners;
-      pagination.value = result.right.pagination;
-      hasFetched.value = true;
     }
   }
 
   // Fungsi baru untuk pindah halaman
   async function changePage(page) {
-    // PERBAIKAN: Tidak perlu cek kondisi di sini, biarkan fetchBanners yang menangani
-    await fetchBanners(page);
-  }
-
-  // 4. Buat fungsi untuk memaksa fetch ulang (misal: setelah create/delete)
-  async function forceRefreshBanners() {
-    hasFetched.value = false;
-    // PERBAIKAN: Ambil halaman saat ini atau halaman pertama
-    const currentPage = pagination.value?.currentPage || 1;
-    await fetchBanners(currentPage);
+    await fetchBanners(page, searchQuery.value);
   }
 
   async function openFormModal(bannerId = null) {
@@ -75,17 +63,15 @@ export const useBannerStore = defineStore("banner", () => {
     selectedBanner.value = null;
 
     if (bannerId) {
-      // --- MODE EDIT ---
+      // ✅ Menggunakan pola "Show, then Load" agar konsisten
+      isFormModalOpen.value = true;
       isFormLoading.value = true;
       const result = await getBannerByIdUseCase.execute(bannerId);
       isFormLoading.value = false;
-
       if (result.right) {
         selectedBanner.value = result.right;
-        // Buka modal HANYA setelah data berhasil didapatkan
-        isFormModalOpen.value = true;
       } else {
-        // Jika gagal mengambil data, tampilkan error dan jangan buka modal
+        isFormModalOpen.value = false;
         modalStore.openModal({
           newTitle: "Error",
           newMessage: mapFailureToMessage(result.left),
@@ -93,8 +79,6 @@ export const useBannerStore = defineStore("banner", () => {
         });
       }
     } else {
-      // --- MODE TAMBAH ---
-      // Langsung buka modal karena tidak perlu mengambil data
       isFormModalOpen.value = true;
     }
   }
@@ -123,8 +107,7 @@ export const useBannerStore = defineStore("banner", () => {
         newStatus: "success",
       });
       isFormModalOpen.value = false;
-      // PERBAIKAN: Gunakan forceRefreshBanners
-      forceRefreshBanners();
+      fetchBanners(pagination.value?.currentPage || 1, searchQuery.value);
     }
   }
 
@@ -145,38 +128,34 @@ export const useBannerStore = defineStore("banner", () => {
         newMessage: "Banner berhasil dihapus.",
         newStatus: "success",
       });
-      // PERBAIKAN: Gunakan forceRefreshBanners
-      forceRefreshBanners();
+      fetchBanners(pagination.value?.currentPage || 1, searchQuery.value);
     }
   }
 
   async function toggleBannerStatus(banner) {
-    const originalStatus = banner.isActive;
-    const bannerIndex = banners.value.findIndex((b) => b.id === banner.id);
-    if (bannerIndex === -1) return;
-
-    banners.value[bannerIndex].isActive = !originalStatus;
-
-    const newStatusApi = originalStatus ? 0 : 1;
+    statusLoadingId.value = banner.id;
+    const newStatusApi = banner.isActive ? 0 : 1;
     const result = await updateBannerStatusUseCase.execute(
       banner.id,
       newStatusApi
     );
+    statusLoadingId.value = null;
 
     if (result.left) {
-      banners.value[bannerIndex].isActive = originalStatus; // Revert
-
       modalStore.openModal({
-        newTitle: "Update Gagal",
+        newTitle: "Error",
         newMessage: mapFailureToMessage(result.left),
         newStatus: "error",
       });
+      // ✅ 4. Panggil fetchTypeProducts untuk revert tampilan jika gagal
+      fetchBanners(pagination.value?.currentPage || 1, searchQuery.value);
     } else {
       modalStore.openModal({
         newTitle: "Berhasil",
         newMessage: "Status banner berhasil diperbarui.",
         newStatus: "success",
       });
+      fetchBanners(pagination.value?.currentPage || 1, searchQuery.value);
     }
   }
 
@@ -184,6 +163,7 @@ export const useBannerStore = defineStore("banner", () => {
     banners,
     pagination,
     isLoading,
+    searchQuery,
     isFormModalOpen,
     selectedBanner,
     isFormLoading,
@@ -193,7 +173,7 @@ export const useBannerStore = defineStore("banner", () => {
     submitBanner,
     removeBanner,
     toggleBannerStatus,
-    forceRefreshBanners,
     changePage,
+    statusLoadingId,
   };
 });

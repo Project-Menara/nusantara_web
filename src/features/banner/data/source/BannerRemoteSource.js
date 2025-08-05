@@ -1,9 +1,14 @@
+// BannerRemoteSource.js
 import apiClient from "@/lib/apiClient.js";
 
 export class BannerRemoteSource {
-  async getBanners(page = 1) {
+  async getBanners(page = 1, search = "") {
     try {
-      const response = await apiClient.get(`/banner?page=${page}`);
+      const params = new URLSearchParams({ page });
+      if (search) {
+        params.append("search", search);
+      }
+      const response = await apiClient.get(`/banner?${params.toString()}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -24,6 +29,7 @@ export class BannerRemoteSource {
   async getBannerById(id) {
     try {
       const response = await apiClient.get(`/banner/${id}`);
+      console.log("Fetched Banner Data:", response.data);
       return response.data;
     } catch (error) {
       throw error;

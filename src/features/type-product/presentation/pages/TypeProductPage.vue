@@ -170,8 +170,6 @@ const { typeProductList, isLoading, pagination, statusLoadingId } =
 
 const isDeleteModalOpen = ref(false);
 const itemToDeleteId = ref(null);
-const filtering = ref("");
-const sorting = ref([]);
 
 // ✅ State dan Logika untuk Debouncing
 const localSearchQuery = ref("");
@@ -182,7 +180,7 @@ watch(localSearchQuery, (newQuery) => {
   debounceTimer = setTimeout(() => {
     // ✅ Panggil store dengan halaman 1 untuk memulai pencarian baru
     typeProductStore.fetchTypeProducts(1, newQuery);
-  }, 500); // Jeda 500ms
+  }, 300); // Jeda 500ms
 });
 
 const columns = [
@@ -266,23 +264,7 @@ const columns = [
 const table = useVueTable({
   data: typeProductList,
   columns,
-  state: {
-    get globalFilter() {
-      return filtering.value;
-    },
-    get sorting() {
-      return sorting.value;
-    },
-  },
-  onGlobalFilterChange: (val) => {
-    filtering.value = val;
-  },
-  onSortingChange: (updater) => {
-    sorting.value =
-      typeof updater === "function" ? updater(sorting.value) : updater;
-  },
   getCoreRowModel: getCoreRowModel(),
-  getFilteredRowModel: getFilteredRowModel(),
   getSortedRowModel: getSortedRowModel(),
 });
 
