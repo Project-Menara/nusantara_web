@@ -150,11 +150,11 @@
 <script setup>
 import { ref, onMounted, watch, h } from "vue";
 import { useTypeProductStore } from "@/features/type-product/presentation/stores/typeProductStore";
+import { useUiStore } from "@/stores/uiStore";
 import { storeToRefs } from "pinia";
 import {
   useVueTable,
   getCoreRowModel,
-  getFilteredRowModel,
   getSortedRowModel,
   FlexRender,
 } from "@tanstack/vue-table";
@@ -165,6 +165,7 @@ import StatusDropdown from "@/components/StatusToggleDropdown.vue";
 import { DialogTitle } from "@headlessui/vue";
 
 const typeProductStore = useTypeProductStore();
+const uiStore = useUiStore();
 const { typeProductList, isLoading, pagination, statusLoadingId } =
   storeToRefs(typeProductStore);
 
@@ -187,12 +188,27 @@ const columns = [
   {
     accessorKey: "image",
     header: "Gambar",
-    cell: ({ getValue }) =>
-      h("img", {
-        src: getValue(),
-        class: "h-10 w-10 object-cover rounded-full mx-auto",
-        loading: "lazy",
-      }),
+    cell: ({ row }) => {
+      // ✅ 3. Buat gambar bisa diklik
+      return h(
+        "div",
+        {
+          class: "flex justify-center cursor-pointer",
+          onClick: () =>
+            uiStore.openImageModal({
+              src: row.original.image,
+              title: row.original.name,
+            }),
+        },
+        [
+          h("img", {
+            src: row.original.image,
+            class: "h-10 w-10 object-cover rounded-full",
+            loading: "lazy",
+          }),
+        ]
+      );
+    },
   },
   { accessorKey: "name", header: "Nama Tipe Produk" },
   {

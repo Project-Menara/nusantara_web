@@ -153,6 +153,7 @@
 <script setup>
 import { ref, onMounted, watch, h } from "vue";
 import { useBannerStore } from "@/features/banner/presentation/stores/bannerStore";
+import { useUiStore } from "@/stores/uiStore";
 import { storeToRefs } from "pinia";
 import { useVueTable, getCoreRowModel, FlexRender } from "@tanstack/vue-table";
 import BannerFormModal from "./components/BannerFormModal.vue";
@@ -162,6 +163,7 @@ import StatusDropdown from "@/components/StatusToggleDropdown.vue";
 import { DialogTitle } from "@headlessui/vue";
 
 const bannerStore = useBannerStore();
+const uiStore = useUiStore();
 const { bannerList, isLoading, pagination, statusLoadingId } =
   storeToRefs(bannerStore);
 
@@ -183,13 +185,28 @@ const columns = [
   {
     accessorKey: "photo",
     header: "Gambar",
-    cell: ({ getValue }) =>
-      h("img", {
-        src: getValue(),
-        class: "h-10 w-20 object-cover rounded mx-auto",
-        loading: "lazy",
-        alt: "Banner",
-      }),
+    cell: ({ row }) => {
+      // ✅ 3. Buat gambar bisa diklik
+      return h(
+        "div",
+        {
+          class: "flex justify-center cursor-pointer",
+          onClick: () =>
+            uiStore.openImageModal({
+              src: row.original.photo,
+              title: row.original.name,
+            }),
+        },
+        [
+          h("img", {
+            src: row.original.photo,
+            class: "h-10 w-20 object-cover rounded mx-auto",
+            loading: "lazy",
+            alt: "Banner",
+          }),
+        ]
+      );
+    },
   },
   { accessorKey: "name", header: "Nama Banner" },
   {
