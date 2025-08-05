@@ -33,8 +33,10 @@
           </svg>
         </div>
         <template v-else>
-          <span>{{ buttonText }}</span>
-          <ChevronDownIcon class="-mr-1 ml-2 h-5 w-5" aria-hidden="true" />
+          <div class="flex justify-around items-center w-full">
+            <span>{{ buttonText }}</span>
+            <ChevronDownIcon class="h-5 w-5" aria-hidden="true" />
+          </div>
         </template>
       </MenuButton>
     </div>
