@@ -8,5 +8,5 @@
 <script setup>
 import "./charts/ChartjsConfig";
 import GlobalResponseModal from "./components/modals/GlobalResponseModal.vue";
-import ImagePreviewModal from "./components/modals/imagePreviewModal.vue";
+import ImagePreviewModal from "./components/modals/ImagePreviewModal.vue";
 </script>
