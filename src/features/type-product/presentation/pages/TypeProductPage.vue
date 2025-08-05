@@ -7,7 +7,7 @@
       >
         Tipe Produk
       </h1>
-      <button
+      <button 
         @click="typeProductStore.openFormModal()"
         class="btn bg-violet-500 hover:bg-violet-600 text-white"
       >
