@@ -1,3 +1,4 @@
+<!-- TypeProductFormModal -->
 <template>
   <BaseModal :isOpen="typeProductStore.isFormModalOpen" @close="closeFormModal">
     <template #header>
@@ -40,8 +41,16 @@
             ></path>
           </svg>
         </div>
+        <div v-if="isCropping">
+          <ImageCropper
+            :src="imageToCrop"
+            :aspect-ratio="1 / 1"
+            @crop="handleCrop"
+            @cancel="cancelCrop"
+          />
+        </div>
 
-        <form @submit.prevent="handleSubmit" class="mt-6 space-y-4">
+        <form v-else @submit.prevent="handleSubmit" class="mt-6 space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label for="name" class="block text-sm font-medium mb-1"
@@ -130,6 +139,7 @@
       </div>
     </template>
     <template #footer>
+      
       <button
         @click="closeFormModal"
         type="button"
@@ -137,7 +147,6 @@
       >
         Batal
       </button>
-
       <div class="relative inline-block group">
         <button
           :disabled="isButtonDisabled"
@@ -185,6 +194,7 @@ import { ref, watch, computed } from "vue";
 import { useTypeProductStore } from "@/features/type-product/presentation/stores/typeProductStore";
 import BaseModal from "@/components/modals/BaseModal.vue";
 import { DialogTitle } from "@headlessui/vue";
+import ImageCropper from "@/components/ImageCropper.vue";
 
 const typeProductStore = useTypeProductStore();
 
@@ -195,6 +205,10 @@ const formData = ref({});
 const selectedFile = ref(null);
 const previewUrl = ref("");
 const originalData = ref(null);
+// ✅ 1. Tambahkan state baru
+const isCropping = ref(false);
+const imageToCrop = ref(null);
+const imageCropperComponentRef = ref(null);
 
 // ✅ PERBAIKAN UTAMA: Pantau 'selectedTypeProduct' untuk mengisi form
 watch(
@@ -249,10 +263,44 @@ const tooltipMessage = computed(() => {
 
 const handleFileChange = (event) => {
   const file = event.target.files[0];
-  if (file) {
-    selectedFile.value = file;
-    previewUrl.value = URL.createObjectURL(file);
+  if (!file) return;
+
+  // ✅ 2. Jangan langsung buat preview, tapi siapkan untuk cropping
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    imageToCrop.value = e.target.result;
+    isCropping.value = true;
+  };
+  reader.readAsDataURL(file);
+
+  // Kosongkan value input agar bisa memilih file yang sama lagi
+  event.target.value = "";
+};
+
+// ✅ 3. Buat fungsi baru untuk menangani hasil crop
+const handleCrop = (blob) => {
+  const croppedFile = new File([blob], "cropped_image.jpg", {
+    type: "image/jpeg",
+  });
+  selectedFile.value = croppedFile;
+  previewUrl.value = URL.createObjectURL(blob);
+  isCropping.value = false; // Kembali ke tampilan form
+};
+
+// ✅ Fungsi yang dipanggil dari footer dinamis
+const cropImage = () => {
+  if (!imageCropperComponentRef.value) return;
+  const { canvas } = imageCropperComponentRef.value.getResult();
+  if (canvas) {
+    canvas.toBlob((blob) => {
+      handleCrop(blob);
+    });
   }
+};
+
+const cancelCrop = () => {
+  isCropping.value = false;
+  imageToCrop.value = null;
 };
 
 const handleSubmit = () => {
@@ -280,3 +328,10 @@ const closeFormModal = () => {
   typeProductStore.isFormModalOpen = false;
 };
 </script>
+
+<style scoped>
+/* Helper class untuk tombol ikon */
+/* .btn-icon {
+  @apply h-8 w-8 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition;
+} */
+</style>
