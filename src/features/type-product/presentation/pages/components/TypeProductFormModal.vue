@@ -1,6 +1,10 @@
 <!-- TypeProductFormModal -->
 <template>
-  <BaseModal :isOpen="typeProductStore.isFormModalOpen" @close="closeFormModal">
+  <BaseModal
+    :isOpen="typeProductStore.isFormModalOpen"
+    @close="closeFormModal"
+    :hide-footer="isCropping"
+  >
     <template #header>
       <div class="text-center">
         <DialogTitle
@@ -139,7 +143,6 @@
       </div>
     </template>
     <template #footer>
-      
       <button
         @click="closeFormModal"
         type="button"

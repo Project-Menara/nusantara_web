@@ -56,17 +56,3 @@ const cancel = () => {
   emit('cancel');
 };
 </script>
-
-<style>
-/* vue-advanced-cropper merekomendasikan untuk memberi batasan ukuran 
-  pada container agar tidak memenuhi seluruh layar.
-*/
-/* .cropper-container {
-  height: 50vh;
-  max-height: 500px;
-  width: 100%;
-  background: #222;
-  border-radius: 0.5rem;
-  overflow: hidden;
-} */
-</style>

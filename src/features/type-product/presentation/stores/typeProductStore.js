@@ -1,3 +1,4 @@
+// type-product-store.js
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useModalStore } from "@/stores/modalStore";

@@ -48,7 +48,7 @@
                 </slot>
               </div>
 
-              <div class="mt-6 flex justify-end space-x-3">
+              <div v-if="!hideFooter" class="mt-6 flex justify-end space-x-3">
                 <slot name="footer">
                   <div
                     v-if="loading"
@@ -113,6 +113,7 @@ import {
 defineProps({
   isOpen: { type: Boolean, required: true },
   loading: { type: Boolean, default: false },
+  hideFooter: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["close", "confirm"]);
