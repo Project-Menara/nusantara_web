@@ -1,5 +1,6 @@
 // File: src/features/voucher/data/repository/VoucherRepository.js
-import { IVoucherRepository } from "../../domain/repository/IVoucherRepository"; // Buat file ini
+import { VoucherEntity } from "../../domain/entities/VoucherEntity";
+import { IVoucherRepository } from "../../domain/repository/IVoucherRepository";
 import { left, right, ServerFailure } from "@/core/error/failure";
 import { VoucherResponseModel } from "../models/VoucherResponseModel";
 import { VoucherRemoteSource } from "../source/VoucherRemoteSource";
