@@ -1,6 +1,6 @@
 // BannerResponseModel.js
 import { BannerEntity } from "../../domain/entities/BannerEntity";
-import { PaginationEntity } from "../../domain/entities/PaginationEntity";
+import { PaginationEntity } from "@/core/domain/entities/PaginationEntity";
 
 export class BannerResponseModel {
   constructor({ banners, pagination }) {

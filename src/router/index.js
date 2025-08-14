@@ -35,7 +35,10 @@ const routes = [
       // --- Group Utama ---
       {
         path: "product-types",
-        component: () => import("@/features/type-product/presentation/pages/TypeProductPage.vue"),
+        component: () =>
+          import(
+            "@/features/type-product/presentation/pages/TypeProductPage.vue"
+          ),
         meta: { roles: ["superadmin"] },
       },
       {
@@ -82,7 +85,8 @@ const routes = [
       },
       {
         path: "vouchers",
-        component: Dashboard, // Placeholder
+        component: () =>
+          import("@/features/voucher/presentation/pages/VoucherPage.vue"), // Placeholder
         meta: { roles: ["superadmin"] },
       },
       // --- Group Laporan ---

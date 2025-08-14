@@ -1,5 +1,5 @@
 // TypeProductResponseModel.js
-import { PaginationEntity } from "../../domain/entities/PaginationEntity";
+import { PaginationEntity } from "@/core/domain/entities/PaginationEntity";
 import { TypeProductEntity } from "../../domain/entities/TypeProductEntity";
 
 export class TypeProductResponseModel {
