@@ -43,7 +43,7 @@ const routes = [
       },
       {
         path: "products",
-        component: Dashboard, // Placeholder
+        component: () => import("@/features/product/presentation/pages/ProductPage.vue"), // Placeholder
         meta: { roles: ["superadmin", "admin"] },
       },
       {
