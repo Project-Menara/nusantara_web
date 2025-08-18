@@ -28,8 +28,23 @@
             v-model="localSearchQuery"
             type="search"
             class="form-input w-full pl-9"
-            placeholder="Cari berdasarkan nama atau kode produk..."
+            placeholder="Cari berdasarkan nama produk..."
           />
+          <div
+            class="absolute inset-0 right-auto flex items-center pointer-events-none"
+          >
+            <svg
+              class="w-4 h-4 fill-current text-gray-400 dark:text-gray-500 ml-3"
+              viewBox="0 0 16 16"
+            >
+              <path
+                d="M7 14c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zM7 2C4.243 2 2 4.243 2 7s2.243 5 5 5 5-2.243 5-5-2.243-5-5-5z"
+              />
+              <path
+                d="M15.707 14.293L13.314 11.9a8.019 8.019 0 01-1.414 1.414l2.393 2.393a.997.997 0 001.414 0 .999.999 0 000-1.414z"
+              />
+            </svg>
+          </div>
         </div>
       </header>
       <div class="overflow-x-auto">
@@ -87,6 +102,7 @@
         />
       </div>
     </div>
+    <ProductFormModal />
     <BaseModal
       :isOpen="isDeleteModalOpen"
       :loading="isLoading"
@@ -114,12 +130,17 @@ import { useUiStore } from "@/stores/uiStore";
 import { storeToRefs } from "pinia";
 import { useVueTable, getCoreRowModel, FlexRender } from "@tanstack/vue-table";
 import Pagination from "@/components/Pagination.vue";
-import StatusDropdown from "@/components/StatusToggleDropdown.vue";
+import ProductFormModal from "./components/ProductFormModal.vue"; // ✅ Import form modal
+import BaseModal from "@/components/modals/BaseModal.vue"; // ✅ Import base modal
+import { DialogTitle } from "@headlessui/vue"; // ✅ Import DialogTitle
 
 const productStore = useProductStore();
 const uiStore = useUiStore();
-const { productList, isLoading, pagination, statusLoadingId } =
-  storeToRefs(productStore);
+const { productList, isLoading, pagination } = storeToRefs(productStore);
+
+// ✅ State untuk modal hapus
+const isDeleteModalOpen = ref(false);
+const itemToDeleteId = ref(null);
 
 const localSearchQuery = ref("");
 let debounceTimer = null;
@@ -156,19 +177,13 @@ const columns = [
         row.original.name
       ),
   },
-  {
-    accessorKey: "code",
-    header: "Code",
-  },
+  { accessorKey: "code", header: "Code" },
   {
     accessorKey: "price",
     header: "Harga",
     cell: ({ getValue }) => `Rp${getValue().toLocaleString("id-ID")}`,
   },
-  {
-    accessorKey: "unit",
-    header: "Unit",
-  },
+  { accessorKey: "unit", header: "Unit" },
   {
     accessorKey: "description",
     header: "Description",
@@ -181,9 +196,11 @@ const columns = [
     cell: ({ row }) =>
       h("div", { class: "flex justify-center items-center space-x-2" }, [
         h(
+          // Tombol Edit
           "button",
           {
-            onClick: () => openDeleteModal(row.original.id),
+            // ✅ Hubungkan ke openFormModal di store
+            onClick: () => productStore.openFormModal(row.original.id),
             title: "Edit",
             class:
               "p-1 rounded-md text-gray-400 hover:text-violet-500 hover:bg-gray-100 dark:hover:bg-gray-700",
@@ -206,11 +223,11 @@ const columns = [
           ]
         ),
         h(
+          // Tombol Hapus
           "button",
           {
-            onClick: () => {
-              /* ... open delete modal ... */
-            },
+            // ✅ Hubungkan ke openDeleteModal lokal
+            onClick: () => openDeleteModal(row.original.id),
             title: "Hapus",
             class:
               "p-1 rounded-md text-red-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700",
@@ -239,7 +256,18 @@ const table = useVueTable({
   getCoreRowModel: getCoreRowModel(),
 });
 
-console.log("Product List:", productList.value);
+// ✅ Tambahkan fungsi untuk modal hapus
+const openDeleteModal = (id) => {
+  itemToDeleteId.value = id;
+  isDeleteModalOpen.value = true;
+};
+
+const confirmDelete = async () => {
+  if (itemToDeleteId.value) {
+    await productStore.removeProduct(itemToDeleteId.value);
+  }
+  isDeleteModalOpen.value = false;
+};
 
 onMounted(() => {
   productStore.fetchProducts();
