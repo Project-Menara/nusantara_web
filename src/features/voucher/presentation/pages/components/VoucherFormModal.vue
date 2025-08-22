@@ -1,96 +1,3 @@
-<!-- <template>
-  <BaseModal :isOpen="voucherStore.isFormModalOpen" @close="closeFormModal">
-    <template #header>
-      </template>
-    <template #body>
-      <div class="relative">
-        <form @submit.prevent="handleSubmit" class="mt-6 space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div>
-                <label for="code" class="block text-sm font-medium mb-1">Kode Voucher</label>
-                <input v-model="formData.code" type="text" id="code" class="form-input w-full" required />
-             </div>
-             <div>
-                <label for="discountType" class="block text-sm font-medium mb-1">Tipe Diskon</label>
-                <select v-model="formData.discountType" id="discountType" class="form-select w-full">
-                  <option value="percent">Persen</option>
-                  <option value="fixed">Nominal</option>
-                </select>
-             </div>
-          </div>
-          <div v-if="formData.discountType === 'percent'">
-             <label for="discountPercent" class="block text-sm font-medium mb-1">Persentase Diskon (%)</label>
-             <input v-model.number="formData.discountPercent" type="number" id="discountPercent" class="form-input w-full" />
-          </div>
-          <div v-if="formData.discountType === 'fixed'">
-             <label for="discountAmount" class="block text-sm font-medium mb-1">Jumlah Diskon (Rp)</label>
-             <input v-model.number="formData.discountAmount" type="number" id="discountAmount" class="form-input w-full" />
-          </div>
-          <div>
-            <label for="description" class="block text-sm font-medium mb-1">Deskripsi</label>
-            <textarea v-model="formData.description" id="description" rows="3" class="form-textarea w-full"></textarea>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="minimumSpend" class="block text-sm font-medium mb-1">Minimal Belanja (Rp)</label>
-                <input v-model.number="formData.minimumSpend" type="number" id="minimumSpend" class="form-input w-full" />
-              </div>
-              <div>
-                <label for="quota" class="block text-sm font-medium mb-1">Kuota</label>
-                <input v-model.number="formData.quota" type="number" id="quota" class="form-input w-full" />
-              </div>
-          </div>
-           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="startDate" class="block text-sm font-medium mb-1">Tanggal Mulai</label>
-                <flat-pickr v-model="formData.startDate" :config="dateConfig" class="form-input w-full" />
-              </div>
-              <div>
-                <label for="endDate" class="block text-sm font-medium mb-1">Tanggal Berakhir</label>
-                <flat-pickr v-model="formData.endDate" :config="dateConfig" class="form-input w-full" />
-              </div>
-          </div>
-        </form>
-      </div>
-    </template>
-    <template #footer>
-        </template>
-  </BaseModal>
-</template>
-
-<script setup>
-import { ref, watch, computed } from "vue";
-import { useVoucherStore } from "../../stores/useVoucherStore";
-import BaseModal from "@/components/modals/BaseModal.vue";
-import { DialogTitle } from "@headlessui/vue";
-import flatPickr from "vue-flatpickr-component";
-import "flatpickr/dist/flatpickr.css";
-import { Indonesian } from "flatpickr/dist/l10n/id.js";
-
-const voucherStore = useVoucherStore();
-const isEditMode = computed(() => !!voucherStore.selectedVoucher?.id);
-const formData = ref({});
-
-const dateConfig = {
-  enableTime: true,
-  dateFormat: "Y-m-d H:i",
-  locale: Indonesian,
-};
-
-watch(() => voucherStore.selectedVoucher, (newVoucher) => { /* ... populate form ... */ });
-watch(() => voucherStore.isFormModalOpen, (isOpen) => { /* ... reset form ... */ });
-
-const handleSubmit = () => {
-    const data = { ...formData.value };
-    // Ubah tanggal menjadi format ISO string sebelum kirim
-    data.startDate = new Date(data.startDate).toISOString();
-    data.endDate = new Date(data.endDate).toISOString();
-    
-    // Kirim data yang sudah di-format, bukan FormData
-    voucherStore.submitVoucher(data);
-};
-// ...
-</script> -->
 // File: src/features/voucher/presentation/components/VoucherFormModal.vue
 <template>
   <BaseModal :isOpen="voucherStore.isFormModalOpen" @close="closeFormModal">
@@ -167,12 +74,13 @@ const handleSubmit = () => {
             <label for="description" class="block text-sm font-medium mb-1"
               >Deskripsi</label
             >
-            <textarea
+            <SimpleEditor v-model="formData.description" />
+            <!-- <textarea
               v-model="formData.description"
               id="description"
               rows="3"
               class="form-textarea w-full"
-            ></textarea>
+            ></textarea> -->
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -265,6 +173,7 @@ import { DialogTitle } from "@headlessui/vue";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { Indonesian } from "flatpickr/dist/l10n/id.js";
+import SimpleEditor from "@/components/forms/SimpleEditor.vue";
 
 const voucherStore = useVoucherStore();
 const isEditMode = computed(() => !!voucherStore.selectedVoucher?.id);
