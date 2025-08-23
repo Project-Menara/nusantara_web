@@ -24,6 +24,27 @@
 @custom-variant dark (&:is(.dark *));
 @custom-variant sidebar-expanded (&:is(.sidebar-expanded *));
 
+/* tambahan untuk text editor */
+.prose {
+  max-width: none;
+}
+.editor-btn {
+  @apply p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700;
+}
+.editor-btn.is-active {
+  @apply bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400;
+}
+
+/* Kustomisasi Tiptap Content Area */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+
 @theme {
   --shadow-sm: 0 1px 1px 0 rgb(0 0 0 / 0.05), 0 1px 2px 0 rgb(0 0 0 / 0.02);
 

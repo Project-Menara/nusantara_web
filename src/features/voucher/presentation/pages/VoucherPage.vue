@@ -111,6 +111,27 @@
     </div>
 
     <VoucherFormModal />
+    <BaseModal
+      :isOpen="isDeleteModalOpen"
+      :loading="isLoading"
+      @close="isDeleteModalOpen = false"
+      @confirm="confirmDelete"
+    >
+      <template #header>
+        <DialogTitle
+          as="h3"
+          class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100"
+        >
+          Hapus Voucher
+        </DialogTitle>
+      </template>
+      <template #body>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat
+          diurungkan.
+        </p>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -137,6 +158,11 @@ watch(localSearchQuery, (newQuery) => {
   }, 500);
 });
 
+const stripHtml = (html) => {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+};
+
 const columns = [
   {
     accessorKey: "code",
@@ -151,8 +177,28 @@ const columns = [
   {
     accessorKey: "description",
     header: "Deskripsi",
-    cell: ({ getValue }) =>
-      h("span", { class: "block max-w-xs truncate" }, getValue()),
+    cell: ({ getValue }) => {
+      // ✅ Ambil teks deskripsi dan bersihkan dari HTML
+      const plainText = stripHtml(getValue());
+
+      // ✅ Buat VNode dengan tooltip yang menampilkan HTML asli saat di-hover
+      return h(
+        "div",
+        {
+          class: "relative group flex justify-start", // Butuh group & relative untuk tooltip
+        },
+        [
+          h("span", { class: "block max-w-[250px] truncate" }, plainText),
+          h("div", {
+            class:
+              "absolute bottom-full left-0 mb-2 w-max max-w-sm p-2 bg-gray-800 text-white text-xs rounded-md shadow-lg invisible group-hover:visible transition-opacity opacity-0 group-hover:opacity-100 z-10",
+            innerHTML: getValue(), // Render HTML asli di dalam tooltip
+          }),
+        ]
+      );
+    },
+    // cell: ({ getValue }) =>
+    //   h("span", { class: "block max-w-xs truncate" }, getValue()),
   },
   {
     header: "Ketentuan", // ✅ 1. Header diganti menjadi 'Ketentuan'
@@ -262,9 +308,7 @@ const columns = [
         h(
           "button",
           {
-            onClick: () => {
-              /* ... open delete modal ... */
-            },
+            onClick: () => openDeleteModal(row.original.id),
             title: "Hapus",
             class: "text-red-400 hover:text-red-500",
           },
@@ -291,6 +335,22 @@ const table = useVueTable({
   columns,
   getCoreRowModel: getCoreRowModel(),
 });
+
+// ✅ Tambahkan state dan fungsi untuk modal hapus
+const isDeleteModalOpen = ref(false);
+const itemToDeleteId = ref(null);
+
+const openDeleteModal = (id) => {
+  itemToDeleteId.value = id;
+  isDeleteModalOpen.value = true;
+};
+
+const confirmDelete = async () => {
+  if (itemToDeleteId.value) {
+    await voucherStore.removeVoucher(itemToDeleteId.value);
+  }
+  isDeleteModalOpen.value = false;
+};
 
 onMounted(() => {
   voucherStore.fetchVouchers();
