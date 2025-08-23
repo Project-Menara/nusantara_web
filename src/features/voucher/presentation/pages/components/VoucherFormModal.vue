@@ -84,13 +84,26 @@
       </div>
     </template>
 
-    <template #footer>
+    <!-- <template #footer>
       <button @click="closeFormModal" type="button" class="btn border-gray-300 ...">Batal</button>
       <div class="relative inline-block group">
         <button @click="handleSubmit" :disabled="voucherStore.isFormLoading" class="btn bg-violet-600 ...">
           <span v-if="voucherStore.isFormLoading">Menyimpan...</span>
           <span v-else>{{ isEditMode ? "Simpan Perubahan" : "Tambah" }}</span>
         </button>
+      </div>
+    </template> -->
+    <template #footer>
+      <button @click="closeFormModal" type="button" class="btn border-gray-300 ...">Batal</button>
+      <div class="relative inline-block group"> <button @click="handleSubmit" :disabled="isButtonDisabled"
+          class="btn bg-violet-600 hover:bg-violet-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed">
+          <span v-if="voucherStore.isFormLoading">Menyimpan...</span>
+          <span v-else>{{ isEditMode ? "Simpan Perubahan" : "Tambah" }}</span>
+        </button>
+        <span v-if="isButtonDisabled && !voucherStore.isFormLoading"
+          class="absolute bottom-full right-0 mb-2 w-max px-2 py-1 bg-gray-700 text-white text-xs rounded-md shadow-lg invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-300">
+          {{ tooltipMessage }}
+        </span>
       </div>
     </template>
   </BaseModal>
@@ -105,12 +118,15 @@ import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import { Indonesian } from "flatpickr/dist/l10n/id.js";
 import SimpleEditor from "@/components/forms/SimpleEditor.vue";
+import { useCurrencyFormatter } from '@/composables/useCurrencyFormatter';
 
 const voucherStore = useVoucherStore();
 
 const isEditMode = computed(() => !!voucherStore.selectedVoucher?.id);
 
 const formData = ref({});
+
+const originalData = ref(null);
 
 const dateConfig = {
   enableTime: true,
@@ -133,45 +149,66 @@ const resetForm = () => {
   };
 };
 
-const handleCurrencyInput = (event, fieldName) => {
-  // 1. Ambil nilai mentah dari input
-  const rawValue = event.target.value;
-
-  // 2. Bersihkan nilai, hanya sisakan angka
-  const newNumber = Number(String(rawValue).replace(/[^0-9]/g, ""));
-
-  // 3. Simpan angka bersih ke formData
-  formData.value[fieldName] = newNumber;
-
-  // 4. Paksa Vue untuk update tampilan input SEGERA
-  // Ini akan menimpa input yang salah (misal: "Rp 5.000e") dengan
-  // format yang benar ("Rp 5.000") dari computed property.
-  event.target.value = new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(newNumber);
-};
-
-const createCurrencyComputed = (fieldName) => {
-  return computed(() => { // Langsung return computed getter
-    const numberValue = formData.value[fieldName] || 0;
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(numberValue);
-  });
-};
-
+const { handleCurrencyInput, createCurrencyComputed } = useCurrencyFormatter(formData);
 const formattedMinimumSpend = createCurrencyComputed('minimumSpend');
 const formattedDiscountAmount = createCurrencyComputed('discountAmount');
 
+const isButtonDisabled = computed(() => {
+  if (voucherStore.isFormLoading) {
+    return true; // Selalu nonaktif saat loading
+  }
+
+  if (isEditMode.value) {
+    // Mode Edit: nonaktif jika tidak ada perubahan
+    // 1. Buat versi yang bisa dibandingkan dari kedua data
+    const currentComparable = getComparableObject(formData.value);
+    const originalComparable = getComparableObject(originalData.value);
+
+    // 2. Bandingkan versi yang sudah dinormalisasi
+    return JSON.stringify(currentComparable) === JSON.stringify(originalComparable);
+  } else {
+    // Mode Tambah: nonaktif jika ada field wajib yang kosong/nol
+    const form = formData.value;
+    if (!form.code || form.quota <= 0) {
+      return true;
+    }
+    if (form.discountType === 'percent' && form.discountPercent <= 0) {
+      return true;
+    }
+    if (form.discountType === 'amount' && form.discountAmount <= 0) {
+      return true;
+    }
+    return false; // Jika semua valid, tombol aktif
+  }
+});
+
+// FUNGSI BARU UNTUK MENYERAGAMKAN FORMAT TANGGAL
+const getComparableObject = (data) => {
+  if (!data) return null;
+  // Salin semua properti, tapi khusus startDate dan endDate,
+  // ubah menjadi format string ISO yang konsisten.
+  return {
+    ...data,
+    startDate: data.startDate ? new Date(data.startDate).toISOString() : null,
+    endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
+  };
+};
+
+const tooltipMessage = computed(() => {
+  if (isEditMode.value) {
+    return "Lakukan perubahan pada data voucher terlebih dahulu.";
+  } else {
+    return "Silakan lengkapi Kode, Kuota, dan Diskon.";
+  }
+});
+
+// Watch untuk memuat data saat mode edit
 watch(
   () => voucherStore.selectedVoucher,
   (newVoucher) => {
     if (newVoucher) {
-      formData.value = {
+      // Salin data voucher ke dalam formData dan originalData
+      const dataToEdit = {
         code: newVoucher.code,
         discountType: newVoucher.discountType,
         discountPercent: newVoucher.discountPercent,
@@ -183,18 +220,52 @@ watch(
         startDate: newVoucher.startDate,
         endDate: newVoucher.endDate,
       };
+      formData.value = { ...dataToEdit };
+      originalData.value = { ...dataToEdit }; // Simpan salinan data asli
     }
-  }
+  },
+  { deep: true }
 );
 
+// Watch untuk mereset form saat modal dibuka untuk "Tambah Voucher"
 watch(
   () => voucherStore.isFormModalOpen,
-  (isOpen) => {
-    if (isOpen && !voucherStore.selectedVoucher) {
-      resetForm();
+  (isOpen, wasOpen) => {
+    // Hanya reset jika modal baru saja dibuka dan ini BUKAN mode edit
+    if (isOpen && !wasOpen && !voucherStore.selectedVoucher) {
+      resetForm(); // Kita tetap panggil resetForm untuk mode tambah
+      originalData.value = null; // Pastikan data asli kosong
     }
   }
 );
+// watch(
+//   () => voucherStore.selectedVoucher,
+//   (newVoucher) => {
+//     if (newVoucher) {
+//       formData.value = {
+//         code: newVoucher.code,
+//         discountType: newVoucher.discountType,
+//         discountPercent: newVoucher.discountPercent,
+//         discountAmount: newVoucher.discountAmount,
+//         description: newVoucher.description,
+//         minimumSpend: newVoucher.minimumSpend,
+//         quota: newVoucher.quota,
+//         pointCost: newVoucher.pointCost,
+//         startDate: newVoucher.startDate,
+//         endDate: newVoucher.endDate,
+//       };
+//     }
+//   }
+// );
+
+// watch(
+//   () => voucherStore.isFormModalOpen,
+//   (isOpen) => {
+//     if (isOpen && !voucherStore.selectedVoucher) {
+//       resetForm();
+//     }
+//   }
+// );
 
 const handleSubmit = () => {
   // const payload = {
