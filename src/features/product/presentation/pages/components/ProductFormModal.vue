@@ -125,10 +125,13 @@ const formData = ref({});
 const previewUrl = ref("");
 const selectedFile = ref(null);
 const originalData = ref(null);
+const galleryInput = ref(null);
 
-// TAMBAHAN: State untuk galeri
 const selectedGalleryFiles = ref([]);
 const galleryPreviewUrls = ref([]);
+// ✅ TAMBAHAN: State untuk mencatat URL gambar lama yang dihapus
+const deletedGalleryUrls = ref(new Set());
+
 
 const typeProductStore = useTypeProductStore();
 const { typeProductList } = storeToRefs(typeProductStore);
@@ -141,20 +144,14 @@ onMounted(() => {
 
 const resetForm = () => {
   formData.value = {
-    name: "",
-    code: "",
-    price: null,
-    unit: "",
-    description: "",
-    type_product_id: "",
+    name: "", code: "", price: null, unit: "", description: "", type_product_id: "",
   };
   previewUrl.value = "";
   selectedFile.value = null;
   originalData.value = null;
-
-  // TAMBAHAN: Reset galeri
   selectedGalleryFiles.value = [];
   galleryPreviewUrls.value = [];
+  deletedGalleryUrls.value.clear(); // ✅ Reset gambar yang dihapus
 };
 
 watch(
@@ -162,21 +159,16 @@ watch(
   (newProduct) => {
     if (newProduct) {
       const dataToEdit = {
-        name: newProduct.name,
-        code: newProduct.code,
-        price: newProduct.price,
-        unit: newProduct.unit,
-        description: newProduct.description,
-        type_product_id: newProduct.typeProduct?.id,
+        name: newProduct.name, code: newProduct.code, price: newProduct.price,
+        unit: newProduct.unit, description: newProduct.description, type_product_id: newProduct.typeProductId,
       };
       formData.value = { ...dataToEdit };
       originalData.value = { ...dataToEdit };
       previewUrl.value = newProduct.coverImage;
       selectedFile.value = null;
-
-      // TAMBAHAN: Tampilkan gambar galeri yang sudah ada
-      galleryPreviewUrls.value = [...newProduct.productImages]; // Salin URL dari server
-      selectedGalleryFiles.value = []; // Kosongkan file baru
+      galleryPreviewUrls.value = [...newProduct.productImages];
+      selectedGalleryFiles.value = [];
+      deletedGalleryUrls.value.clear(); 
     }
   }
 );
@@ -190,35 +182,55 @@ watch(
   }
 );
 
-// TAMBAHAN: Fungsi untuk menangani multiple file
 const handleGalleryFilesChange = (event) => {
   const files = event.target.files;
   for (const file of files) {
     selectedGalleryFiles.value.push(file);
     galleryPreviewUrls.value.push(URL.createObjectURL(file));
   }
+  if (galleryInput.value) galleryInput.value.value = null;
 };
 
-// TAMBAHAN: Fungsi untuk menghapus gambar dari preview
+// ✅ FUNGSI removeGalleryImage DIPERBARUI
 const removeGalleryImage = (index) => {
-  selectedGalleryFiles.value.splice(index, 1);
+  const removedUrl = galleryPreviewUrls.value[index];
+
+  // Cek apakah yang dihapus adalah URL dari server (bukan blob URL)
+  if (removedUrl && !removedUrl.startsWith('blob:')) {
+    deletedGalleryUrls.value.add(removedUrl);
+  }
+
+  // Cari file yang sesuai di selectedGalleryFiles berdasarkan URL previewnya
+  const fileIndex = selectedGalleryFiles.value.findIndex(file =>
+    URL.createObjectURL(file) === removedUrl
+  );
+
+  // Hapus dari kedua array
   galleryPreviewUrls.value.splice(index, 1);
+  if (fileIndex > -1) {
+    selectedGalleryFiles.value.splice(fileIndex, 1);
+  }
 };
 
 const isButtonDisabled = computed(() => {
   if (productStore.isFormLoading) return true;
   if (isEditMode.value) {
-    const hasDataChanged =
-      JSON.stringify(formData.value) !== JSON.stringify(originalData.value);
-    const hasNewFile = !!selectedFile.value;
-    return !hasDataChanged && !hasNewFile;
+    const hasDataChanged = JSON.stringify(formData.value) !== JSON.stringify(originalData.value);
+    const hasNewCover = !!selectedFile.value;
+    const hasNewGalleryFiles = selectedGalleryFiles.value.length > 0;
+    const hasDeletedGalleryImages = deletedGalleryUrls.value.size > 0;
+
+    return !hasDataChanged && !hasNewCover && !hasNewGalleryFiles && !hasDeletedGalleryImages;
   } else {
     return !formData.value.name || !selectedFile.value;
   }
 });
 
 const tooltipMessage = computed(() => {
-  /* ... */
+  if (isEditMode.value) {
+    return "Lakukan perubahan pada data atau gambar terlebih dahulu.";
+  }
+  return "Nama produk dan Gambar Utama wajib diisi.";
 });
 
 const handleFileChange = (event) => {
@@ -229,41 +241,72 @@ const handleFileChange = (event) => {
   }
 };
 
-const handleSubmit = () => {
+// ✅ Helper untuk mengubah URL ke Blob
+async function urlToBlob(url) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return blob;
+}
+
+// ✅ FUNGSI handleSubmit DIPERBARUI TOTAL
+const handleSubmit = async () => {
   if (isButtonDisabled.value) return;
   const data = new FormData();
 
-  // Append semua data dari form
+  // Append data form teks
   Object.keys(formData.value).forEach((key) => {
     if (formData.value[key] !== null) {
       data.append(key, formData.value[key]);
     }
   });
 
-  // Tambah file jika ada
+  // Append cover
+  const coverKey = isEditMode.value ? "new_cover" : "cover";
   if (selectedFile.value) {
-    data.append(isEditMode.value ? "new_cover" : "cover", selectedFile.value);
+    data.append(coverKey, selectedFile.value);
   }
 
-  // --- TAMBAHAN: Append semua file galeri ---
-  if (selectedGalleryFiles.value.length > 0) {
-    // Loop melalui setiap file dan append dengan key yang sama
-    // Backend akan menerimanya sebagai array file.
-    // Gunakan 'new_gallery' untuk edit, 'gallery' untuk create
-    const galleryKey = isEditMode.value ? 'new_gallery' : 'gallery';
-    selectedGalleryFiles.value.forEach(file => {
-      data.append(galleryKey, file);
-    });
-  }
-
-  // Tambah status untuk mode 'Tambah'
+  // Logika untuk Mode Tambah
   if (!isEditMode.value) {
     data.append("status", 1);
+    if (selectedGalleryFiles.value.length > 0) {
+      selectedGalleryFiles.value.forEach(file => {
+        data.append("gallery", file);
+      });
+    }
   }
-
-  // Method spoofing untuk 'Edit'
-  if (isEditMode.value) {
+  // Logika untuk Mode Edit
+  else {
     data.append("_method", "PUT");
+
+    const hasNewGalleryFiles = selectedGalleryFiles.value.length > 0;
+    const hasDeletedGalleryImages = deletedGalleryUrls.value.size > 0;
+
+    // Hanya set replace_gallery ke true jika ada perubahan pada galeri
+    if (hasNewGalleryFiles || hasDeletedGalleryImages) {
+      data.append("replace_gallery", "true");
+
+      // Filter gambar lama yang TIDAK dihapus
+      const existingUrlsToKeep = productStore.selectedProduct.productImages.filter(
+        url => !deletedGalleryUrls.value.has(url)
+      );
+
+      // Kirim ulang gambar lama yang dipertahankan sebagai blob
+      for (const url of existingUrlsToKeep) {
+        const blob = await urlToBlob(url);
+        const fileName = url.substring(url.lastIndexOf('/') + 1);
+        data.append("new_gallery", blob, fileName);
+      }
+
+      // Tambahkan gambar baru
+      selectedGalleryFiles.value.forEach(file => {
+        data.append("new_gallery", file);
+      });
+
+    } else {
+      // Jika tidak ada perubahan galeri, kirim false
+      data.append("replace_gallery", "false");
+    }
   }
 
   productStore.submitProduct(data);

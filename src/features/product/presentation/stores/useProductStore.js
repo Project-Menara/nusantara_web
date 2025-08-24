@@ -106,7 +106,7 @@ export const useProductStore = defineStore("Product", () => {
       isFormModalOpen.value = false;
       setTimeout(() => {
         fetchProducts(pagination.value?.currentPage || 1, searchQuery.value);
-      }, 3000);
+      }, 2000);
       // fetchProducts(pagination.value?.currentPage || 1, searchQuery.value);
     }
   }

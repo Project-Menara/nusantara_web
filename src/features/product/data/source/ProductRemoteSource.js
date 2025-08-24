@@ -7,12 +7,9 @@ export class ProductRemoteSource {
       if (search) {
         params.append("search", search);
       }
-      console.log(">>>>>>>>>>>>>>");
       const response = await apiClient.get(`/product?${params.toString()}`);
-      console.log("Fetched Products Data:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Error fetching products:", error);
       throw error;
     }
   }

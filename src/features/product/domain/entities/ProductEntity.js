@@ -8,8 +8,9 @@ export class ProductEntity {
     unit,
     description,
     isActive,
-    typeProductName, // Kita ambil hanya nama tipe produk
-    productImages, // Array berisi URL gambar galeri
+    typeProductId,
+    typeProductName,
+    productImages,
     createdBy,
     createdAt,
   }) {
@@ -21,6 +22,7 @@ export class ProductEntity {
     this.unit = unit;
     this.description = description;
     this.isActive = isActive;
+    this.typeProductId = typeProductId;
     this.typeProductName = typeProductName;
     this.productImages = productImages;
     this.createdBy = createdBy;
@@ -37,6 +39,7 @@ export class ProductEntity {
       unit: json.unit,
       description: json.description,
       isActive: json.status === 1,
+      typeProductId: json.type_product?.id || null,
       typeProductName: json.type_product?.name || "N/A",
       productImages:
         json.product_images?.map((img) => img.image?.image_path) || [],

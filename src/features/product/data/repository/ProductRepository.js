@@ -34,7 +34,6 @@ export class ProductRepository extends IProductRepository {
     try {
       const response = await this.remoteSource.getProducts(page, search);
       const model = ProductResponseModel.fromJSON(response);
-      console.log(">>>>>>>");
       return right({
         products: model.products,
         pagination: model.pagination,
