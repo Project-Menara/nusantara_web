@@ -1,51 +1,29 @@
 <template>
   <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
     <div class="sm:flex sm:justify-between sm:items-center mb-5">
-      <h1
-        class="text-2xl md:text-3xl text-gray-800 dark:text-gray-100 font-bold"
-      >
+      <h1 class="text-2xl md:text-3xl text-gray-800 dark:text-gray-100 font-bold">
         Voucher
       </h1>
-      <button
-        @click="voucherStore.openFormModal()"
-        class="btn bg-violet-500 hover:bg-violet-600 text-white"
-      >
-        <svg
-          class="w-4 h-4 fill-current opacity-50 shrink-0"
-          viewBox="0 0 16 16"
-        >
+      <button @click="voucherStore.openFormModal()" class="btn bg-violet-500 hover:bg-violet-600 text-white">
+        <svg class="w-4 h-4 fill-current opacity-50 shrink-0" viewBox="0 0 16 16">
           <path
-            d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z"
-          />
+            d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z" />
         </svg>
         <span class="hidden xs:block ml-2">Tambah Voucher</span>
       </button>
     </div>
 
-    <div
-      class="bg-white dark:bg-gray-800 shadow-lg rounded-sm border border-gray-200 dark:border-gray-700 relative"
-    >
+    <div class="bg-white dark:bg-gray-800 shadow-lg rounded-sm border border-gray-200 dark:border-gray-700 relative">
       <header class="px-5 py-4">
         <div class="relative">
-          <input
-            v-model="localSearchQuery"
-            type="search"
-            class="form-input w-full pl-9"
-            placeholder="Cari berdasarkan kode voucher..."
-          />
-          <div
-            class="absolute inset-0 right-auto flex items-center pointer-events-none"
-          >
-            <svg
-              class="w-4 h-4 fill-current text-gray-400 dark:text-gray-500 ml-3"
-              viewBox="0 0 16 16"
-            >
+          <input v-model="localSearchQuery" type="search" class="form-input w-full pl-9"
+            placeholder="Cari berdasarkan kode voucher..." />
+          <div class="absolute inset-0 right-auto flex items-center pointer-events-none">
+            <svg class="w-4 h-4 fill-current text-gray-400 dark:text-gray-500 ml-3" viewBox="0 0 16 16">
               <path
-                d="M7 14c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zM7 2C4.243 2 2 4.243 2 7s2.243 5 5 5 5-2.243 5-5-2.243-5-5-5z"
-              />
+                d="M7 14c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zM7 2C4.243 2 2 4.243 2 7s2.243 5 5 5 5-2.243 5-5-2.243-5-5-5z" />
               <path
-                d="M15.707 14.293L13.314 11.9a8.019 8.019 0 01-1.414 1.414l2.393 2.393a.997.997 0 001.414 0 .999.999 0 000-1.414z"
-              />
+                d="M15.707 14.293L13.314 11.9a8.019 8.019 0 01-1.414 1.414l2.393 2.393a.997.997 0 001.414 0 .999.999 0 000-1.414z" />
             </svg>
           </div>
         </div>
@@ -53,29 +31,16 @@
       <div class="overflow-x-auto">
         <table class="table-auto w-full dark:text-gray-300">
           <thead
-            class="text-xs font-semibold uppercase text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700 dark:bg-opacity-50"
-          >
-            <tr
-              v-for="headerGroup in table.getHeaderGroups()"
-              :key="headerGroup.id"
-            >
-              <th
-                v-for="header in headerGroup.headers"
-                :key="header.id"
-                class="p-2 whitespace-nowrap text-center"
-              >
+            class="text-xs font-semibold uppercase text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700 dark:bg-opacity-50">
+            <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
+              <th v-for="header in headerGroup.headers" :key="header.id" class="p-2 whitespace-nowrap text-center">
                 <div class="font-semibold">
-                  <FlexRender
-                    :render="header.column.columnDef.header"
-                    :props="header.getContext()"
-                  />
+                  <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
                 </div>
               </th>
             </tr>
           </thead>
-          <tbody
-            class="text-sm divide-y divide-gray-100 dark:divide-gray-700/60"
-          >
+          <tbody class="text-sm divide-y divide-gray-100 dark:divide-gray-700/60">
             <tr v-if="isLoading && voucherList.length === 0">
               <td :colspan="columns.length" class="p-4 text-center">
                 Memuat data...
@@ -86,42 +51,25 @@
                 Data tidak ditemukan.
               </td>
             </tr>
-            <tr v-for="row in table.getRowModel().rows" :key="row.id">
-              <td
-                v-for="cell in row.getVisibleCells()"
-                :key="cell.id"
-                class="p-2 whitespace-nowrap text-center"
-              >
-                <FlexRender
-                  :render="cell.column.columnDef.cell"
-                  :props="cell.getContext()"
-                />
+            <tr v-for="row in table.getRowModel().rows" :key="row.id"
+              class="hover:bg-gray-100 dark:hover:bg-gray-900/20">
+              <td v-for="cell in row.getVisibleCells()" :key="cell.id" class="p-2 whitespace-nowrap text-center">
+                <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
               </td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="p-4">
-        <Pagination
-          :pagination="pagination"
-          :isLoading="isLoading"
-          @change-page="voucherStore.changePage"
-        />
+        <Pagination :pagination="pagination" :isLoading="isLoading" @change-page="voucherStore.changePage" />
       </div>
     </div>
 
     <VoucherFormModal />
-    <BaseModal
-      :isOpen="isDeleteModalOpen"
-      :loading="isLoading"
-      @close="isDeleteModalOpen = false"
-      @confirm="confirmDelete"
-    >
+    <BaseModal :isOpen="isDeleteModalOpen" :loading="isLoading" @close="isDeleteModalOpen = false"
+      @confirm="confirmDelete">
       <template #header>
-        <DialogTitle
-          as="h3"
-          class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100"
-        >
+        <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">
           Hapus Voucher
         </DialogTitle>
       </template>

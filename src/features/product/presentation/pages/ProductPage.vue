@@ -29,16 +29,21 @@
       </header>
       <div class="overflow-x-auto">
         <table class="table-auto w-full dark:text-gray-300">
-          <thead class="text-xs font-semibold uppercase ...">
+          <thead
+            class="text-xs font-semibold uppercase text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700 dark:bg-opacity-50">
             <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
-              <th v-for="header in headerGroup.headers" :key="header.id" class="p-2 ...">
+              <th v-for="header in headerGroup.headers" :key="header.id" class="p-2 whitespace-nowrap text-center"
+                :class="{
+                  'pl-4': header.index === 0,
+                  'pr-4': header.index === headerGroup.headers.length - 1
+                }">
                 <div class="font-semibold">
                   <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
                 </div>
               </th>
             </tr>
           </thead>
-          <tbody class="text-sm divide-y ...">
+          <tbody class="text-sm divide-y divide-gray-100 dark:divide-gray-700/60">
             <tr v-if="isLoading && productList.length === 0">
               <td :colspan="columns.length" class="p-4 text-center">
                 Memuat data...
@@ -49,8 +54,17 @@
                 Data tidak ditemukan.
               </td>
             </tr>
-            <tr v-for="row in table.getRowModel().rows" :key="row.id">
-              <td v-for="cell in row.getVisibleCells()" :key="cell.id" class="p-2 ...">
+            <tr v-for="row in table.getRowModel().rows" :key="row.id"
+              class="hover:bg-gray-100 dark:hover:bg-gray-900/20">
+              <!-- <td v-for="cell in row.getVisibleCells()" :key="cell.id" class="p-2 whitespace-nowrap text-center" :class="{
+                'pl-4': index === 0,
+                'pr-4': index === row.getVisibleCells().length - 1
+              }"> -->
+              <td v-for="(cell, index) in row.getVisibleCells()" :key="cell.id"
+                class="p-2 whitespace-nowrap text-center" :class="{
+                  'pl-4': index === 0,
+                  'pr-4': index === row.getVisibleCells().length - 1
+                }">
                 <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
               </td>
             </tr>
@@ -85,11 +99,12 @@ import { useVueTable, getCoreRowModel, FlexRender } from "@tanstack/vue-table";
 import Pagination from "@/components/Pagination.vue";
 import ProductFormModal from "./components/ProductFormModal.vue"; // ✅ Import form modal
 import BaseModal from "@/components/modals/BaseModal.vue"; // ✅ Import base modal
-import { DialogTitle } from "@headlessui/vue"; // ✅ Import DialogTitle
+import { DialogTitle } from "@headlessui/vue";
+import StatusDropdown from "@/components/StatusToggleDropdown.vue";
 
 const productStore = useProductStore();
 const uiStore = useUiStore();
-const { productList, isLoading, pagination } = storeToRefs(productStore);
+const { productList, isLoading, pagination, statusLoadingId } = storeToRefs(productStore);
 
 // ✅ State untuk modal hapus
 const isDeleteModalOpen = ref(false);
@@ -103,6 +118,116 @@ watch(localSearchQuery, (newQuery) => {
     productStore.fetchProducts(1, newQuery);
   }, 500);
 });
+
+// const columns = [
+//   {
+//     accessorKey: "coverImage",
+//     header: "Gambar",
+//     cell: ({ row }) =>
+//       h("img", {
+//         src: row.original.coverImage,
+//         class:
+//           "h-12 w-12 object-cover rounded-md mx-auto cursor-pointer shadow-lg",
+//         onClick: () =>
+//           uiStore.openImageModal({
+//             src: row.original.coverImage,
+//             title: row.original.name,
+//           }),
+//       }),
+//   },
+//   {
+//     accessorKey: "name",
+//     header: "Nama",
+//     cell: ({ row }) =>
+//       h(
+//         "div",
+//         { class: "text-left font-semibold text-gray-800 dark:text-gray-100" },
+//         row.original.name
+//       ),
+//   },
+//   { accessorKey: "code", header: "Code" },
+//   {
+//     accessorKey: "price",
+//     header: "Harga",
+//     cell: ({ getValue }) => `Rp${getValue().toLocaleString("id-ID")}`,
+//   },
+//   { accessorKey: "unit", header: "Unit" },
+//   {
+//     accessorKey: "description",
+//     header: "Description",
+//     cell: ({ getValue }) =>
+//       h("span", { class: "block max-w-xs truncate text-left" }, getValue()),
+//   },
+//   {
+//     accessorKey: 'isActive',
+//     header: 'Status',
+//     cell: ({ row }) => h(StatusDropdown, {
+//       item: row.original,
+//       // Tampilkan loading hanya untuk item yang sedang di-update
+//       isLoading: statusLoadingId.value === row.original.id,
+//       // Panggil fungsi toggle status dari store
+//       onToggle: () => productStore.toggleProductStatus(row.original),
+//     }),
+//   },
+//   {
+//     id: "actions",
+//     header: "Action",
+//     cell: ({ row }) =>
+//       h("div", { class: "flex justify-center items-center space-x-2" }, [
+//         h(
+//           // Tombol Edit
+//           "button",
+//           {
+//             // ✅ Hubungkan ke openFormModal di store
+//             onClick: () => productStore.openFormModal(row.original.id),
+//             title: "Edit",
+//             class:
+//               "p-1 rounded-md text-gray-400 hover:text-violet-500 hover:bg-gray-100 dark:hover:bg-gray-700",
+//           },
+//           [
+//             h(
+//               "svg",
+//               { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
+//               [
+//                 h("path", {
+//                   d: "M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z",
+//                 }),
+//                 h("path", {
+//                   "fill-rule": "evenodd",
+//                   d: "M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z",
+//                   "clip-rule": "evenodd",
+//                 }),
+//               ]
+//             ),
+//           ]
+//         ),
+//         h(
+//           // Tombol Hapus
+//           "button",
+//           {
+//             // ✅ Hubungkan ke openDeleteModal lokal
+//             onClick: () => openDeleteModal(row.original.id),
+//             title: "Hapus",
+//             class:
+//               "p-1 rounded-md text-red-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700",
+//           },
+//           [
+//             h(
+//               "svg",
+//               { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
+//               [
+//                 h("path", {
+//                   "fill-rule": "evenodd",
+//                   d: "M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z",
+//                   "clip-rule": "evenodd",
+//                 }),
+//               ]
+//             ),
+//           ]
+//         ),
+//       ]),
+//   },
+// ];
 
 const columns = [
   {
@@ -123,43 +248,94 @@ const columns = [
   {
     accessorKey: "name",
     header: "Nama",
+    // ✅ MODIFIKASI: Tambahkan tipe produk sebagai sub-teks
     cell: ({ row }) =>
       h(
         "div",
-        { class: "text-left font-semibold text-gray-800 dark:text-gray-100" },
-        row.original.name
+        { class: "text-left" }, // Rata kiri
+        [
+          h("div", { class: "font-bold text-gray-800 dark:text-gray-100" }, row.original.name),
+          h("div", { class: "text-xs text-gray-500" }, row.original.typeProductName)
+        ]
       ),
   },
-  { accessorKey: "code", header: "Code" },
+  {
+    accessorKey: "code",
+    header: "Code",
+    // ✅ MODIFIKASI: Styling untuk kode agar terlihat seperti tag
+    cell: ({ getValue }) =>
+      h("div", { class: "text-xs inline-flex font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-center px-2.5 py-1" }, getValue())
+  },
   {
     accessorKey: "price",
     header: "Harga",
-    cell: ({ getValue }) => `Rp${getValue().toLocaleString("id-ID")}`,
+    // ✅ MODIFIKASI: Rata kanan untuk angka
+    cell: ({ getValue }) =>
+      h("div", { class: "text-right font-medium text-emerald-500 pr-4" }, `Rp${getValue().toLocaleString("id-ID")}`)
   },
-  { accessorKey: "unit", header: "Unit" },
+  {
+    accessorKey: "unit",
+    header: "Unit",
+    // ✅ MODIFIKASI: Gunakan badge untuk unit
+    cell: ({ getValue }) =>
+      h("div", { class: "text-xs inline-flex font-medium bg-sky-100 dark:bg-sky-500/30 text-sky-600 dark:text-sky-400 rounded-full text-center px-2.5 py-1" }, getValue())
+  },
   {
     accessorKey: "description",
     header: "Description",
     cell: ({ getValue }) =>
-      h("span", { class: "block max-w-xs truncate text-left" }, getValue()),
+      h("span", { class: "block max-w-xs truncate text-left" }, getValue()), // Rata kiri
+  },
+  {
+    accessorKey: 'isActive',
+    header: 'Status',
+    cell: ({ row }) => h(StatusDropdown, {
+      item: row.original,
+      isLoading: statusLoadingId.value === row.original.id,
+      onToggle: () => productStore.toggleProductStatus(row.original),
+    }),
   },
   {
     id: "actions",
     header: "Action",
-    cell: ({ row }) =>
-      h("div", { class: "flex justify-center items-center space-x-2" }, [
+    cell: ({ row }) => {
+      const product = row.original;
+      const actionButtons = [];
+
+      // ✅ Tombol Lihat Galeri (SEKARANG SELALU TAMPIL)
+      // Hapus kondisi 'if' yang sebelumnya membungkus tombol ini
+      actionButtons.push(
         h(
-          // Tombol Edit
           "button",
           {
-            // ✅ Hubungkan ke openFormModal di store
-            onClick: () => productStore.openFormModal(row.original.id),
-            title: "Edit",
-            class:
-              "p-1 rounded-md text-gray-400 hover:text-violet-500 hover:bg-gray-100 dark:hover:bg-gray-700",
+            onClick: () => uiStore.openImageModal({
+              src: product.productImages, // Kirim array (bisa kosong)
+              title: `Galeri: ${product.name}`,
+              isCarousel: true,
+            }),
+            title: "Lihat Galeri",
+            class: "p-1 rounded-md text-gray-400 hover:text-sky-500 hover:bg-gray-100 dark:hover:bg-gray-700",
           },
           [
-            h(
+            h( // SVG Icon
+              "svg", { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
+              [h("path", { "fill-rule": "evenodd", d: "M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z", "clip-rule": "evenodd" })]
+            ),
+          ]
+        )
+      );
+
+      // Tombol 2: Edit
+      actionButtons.push(
+        h(
+          "button",
+          {
+            onClick: () => productStore.openFormModal(product.id),
+            title: "Edit",
+            class: "p-1 rounded-md text-gray-400 hover:text-violet-500 hover:bg-gray-100 dark:hover:bg-gray-700",
+          },
+          [
+            h( // SVG Icon untuk edit
               "svg",
               { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
               [
@@ -174,19 +350,20 @@ const columns = [
               ]
             ),
           ]
-        ),
+        )
+      );
+
+      // Tombol 3: Hapus
+      actionButtons.push(
         h(
-          // Tombol Hapus
           "button",
           {
-            // ✅ Hubungkan ke openDeleteModal lokal
-            onClick: () => openDeleteModal(row.original.id),
+            onClick: () => openDeleteModal(product.id),
             title: "Hapus",
-            class:
-              "p-1 rounded-md text-red-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700",
+            class: "p-1 rounded-md text-red-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700",
           },
           [
-            h(
+            h( // SVG Icon untuk hapus
               "svg",
               { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
               [
@@ -198,9 +375,71 @@ const columns = [
               ]
             ),
           ]
-        ),
-      ]),
+        )
+      );
+
+      // Render semua tombol di dalam satu div
+      return h("div", { class: "flex justify-center items-center space-x-2" }, actionButtons);
+    },
   },
+  // {
+  //   id: "actions",
+  //   header: "Action",
+  //   cell: ({ row }) =>
+  //     h("div", { class: "flex justify-center items-center space-x-2" }, [
+  //       h(
+  //         // Tombol Edit
+  //         "button",
+  //         {
+  //           // ✅ Hubungkan ke openFormModal di store
+  //           onClick: () => productStore.openFormModal(row.original.id),
+  //           title: "Edit",
+  //           class:
+  //             "p-1 rounded-md text-gray-400 hover:text-violet-500 hover:bg-gray-100 dark:hover:bg-gray-700",
+  //         },
+  //         [
+  //           h(
+  //             "svg",
+  //             { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
+  //             [
+  //               h("path", {
+  //                 d: "M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z",
+  //               }),
+  //               h("path", {
+  //                 "fill-rule": "evenodd",
+  //                 d: "M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z",
+  //                 "clip-rule": "evenodd",
+  //               }),
+  //             ]
+  //           ),
+  //         ]
+  //       ),
+  //       h(
+  //         // Tombol Hapus
+  //         "button",
+  //         {
+  //           // ✅ Hubungkan ke openDeleteModal lokal
+  //           onClick: () => openDeleteModal(row.original.id),
+  //           title: "Hapus",
+  //           class:
+  //             "p-1 rounded-md text-red-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700",
+  //         },
+  //         [
+  //           h(
+  //             "svg",
+  //             { class: "w-5 h-5", viewBox: "0 0 20 20", fill: "currentColor" },
+  //             [
+  //               h("path", {
+  //                 "fill-rule": "evenodd",
+  //                 d: "M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z",
+  //                 "clip-rule": "evenodd",
+  //               }),
+  //             ]
+  //           ),
+  //         ]
+  //       ),
+  //     ]),
+  // },
 ];
 
 const table = useVueTable({

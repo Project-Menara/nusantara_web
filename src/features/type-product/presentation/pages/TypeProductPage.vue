@@ -98,7 +98,7 @@
                 Data tidak ditemukan.
               </td>
             </tr>
-            <tr v-for="row in table.getRowModel().rows" :key="row.id">
+            <tr v-for="row in table.getRowModel().rows" :key="row.id" class="hover:bg-gray-100 dark:hover:bg-gray-900/20">
               <td
                 v-for="cell in row.getVisibleCells()"
                 :key="cell.id"
