@@ -12,7 +12,13 @@ import { mapFailureToMessage } from "@/core/error/map_failure_to_message";
 
 export const useProductStore = defineStore("Product", () => {
   const products = ref([]);
-  const pagination = ref(null);
+  // const pagination = ref(null);
+  const pagination = ref({
+    currentPage: 1,
+    perPage: 10,
+    totalData: 0,
+    totalPages: 1,
+  });
   const isLoading = ref(false);
   const isFormModalOpen = ref(false);
   const selectedProduct = ref(null);
@@ -98,7 +104,10 @@ export const useProductStore = defineStore("Product", () => {
         newStatus: "success",
       });
       isFormModalOpen.value = false;
-      fetchProducts(pagination.value?.currentPage || 1, searchQuery.value);
+      setTimeout(() => {
+        fetchProducts(pagination.value?.currentPage || 1, searchQuery.value);
+      }, 3000);
+      // fetchProducts(pagination.value?.currentPage || 1, searchQuery.value);
     }
   }
 

@@ -2,14 +2,21 @@ import apiClient from "@/lib/apiClient.js";
 
 export class ProductRemoteSource {
   async getProducts(page = 1, search = "") {
-    const params = new URLSearchParams({ page });
-    if (search) params.append("search", search);
-    const response = await apiClient.get(`/product?${params.toString()}`);
-    return response.data;
+    try {
+      const params = new URLSearchParams({ page });
+      if (search) {
+        params.append("search", search);
+      }
+      console.log(">>>>>>>>>>>>>>");
+      const response = await apiClient.get(`/product?${params.toString()}`);
+      console.log("Fetched Products Data:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      throw error;
+    }
   }
-  /**
-   * Membuat produk baru menggunakan FormData (untuk upload file).
-   */
+
   async createProduct(formData) {
     try {
       const response = await apiClient.post("/product/create", formData, {
@@ -51,9 +58,6 @@ export class ProductRemoteSource {
     }
   }
 
-  /**
-   * Menghapus produk berdasarkan ID.
-   */
   async deleteProduct(id) {
     try {
       const response = await apiClient.delete(`/product/${id}/delete`);

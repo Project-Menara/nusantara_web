@@ -8,6 +8,7 @@ export class BannerRemoteSource {
       if (search) {
         params.append("search", search);
       }
+      console.log(">>>>>");
       const response = await apiClient.get(`/banner?${params.toString()}`);
       return response.data;
     } catch (error) {
