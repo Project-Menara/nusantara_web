@@ -50,7 +50,8 @@ export class ProductRepository extends IProductRepository {
   async createProduct(formData) {
     try {
       const response = await this.remoteSource.createProduct(formData);
-      return right(mapDataToEntity(response.data));
+      // return right(mapDataToEntity(response.data));
+      return right(ProductEntity.fromJSON(response.data));
     } catch (error) {
       return left(
         new ServerFailure(
@@ -63,7 +64,8 @@ export class ProductRepository extends IProductRepository {
   async getProductById(id) {
     try {
       const response = await this.remoteSource.getProductById(id);
-      return right(mapDataToEntity(response.data));
+      // return right(mapDataToEntity(response.data));
+      return right(ProductEntity.fromJSON(response.data));
     } catch (error) {
       return left(
         new ServerFailure(
@@ -76,7 +78,8 @@ export class ProductRepository extends IProductRepository {
   async updateProduct(id, formData) {
     try {
       const response = await this.remoteSource.updateProduct(id, formData);
-      return right(mapDataToEntity(response.data));
+      // return right(mapDataToEntity(response.data));
+      return right(ProductEntity.fromJSON(response.data));
     } catch (error) {
       return left(
         new ServerFailure(
@@ -94,6 +97,20 @@ export class ProductRepository extends IProductRepository {
       return left(
         new ServerFailure(
           error.response?.data?.message || "Gagal menghapus produk."
+        )
+      );
+    }
+  }
+
+  async updateProductStatus(id, status) {
+    try {
+      const response = await this.remoteSource.updateProductStatus(id, status);
+      // Untuk update status, biasanya kita hanya butuh pesan sukses
+      return right({ message: response.message });
+    } catch (error) {
+      return left(
+        new ServerFailure(
+          error.response?.data?.message || "Gagal memperbarui status produk."
         )
       );
     }

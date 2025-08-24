@@ -26,4 +26,22 @@ export class ProductEntity {
     this.createdBy = createdBy;
     this.createdAt = new Date(createdAt);
   }
+  // / Tambahkan static method ini
+  static fromJSON(json) {
+    return new ProductEntity({
+      id: json.id,
+      name: json.name,
+      coverImage: json.image?.image_path || null,
+      code: json.code,
+      price: json.price,
+      unit: json.unit,
+      description: json.description,
+      isActive: json.status === 1,
+      typeProductName: json.type_product?.name || "N/A",
+      productImages:
+        json.product_images?.map((img) => img.image?.image_path) || [],
+      createdBy: json.created_by?.name || "N/A",
+      createdAt: json.created_at,
+    });
+  }
 }

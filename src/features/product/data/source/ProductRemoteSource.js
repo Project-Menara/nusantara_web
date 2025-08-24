@@ -63,13 +63,11 @@ export class ProductRemoteSource {
     }
   }
 
-  /**
-   * Memperbarui status produk (aktif/tidak aktif).
-   */
   async updateProductStatus(id, status) {
     try {
+      // Body-nya adalah JSON, bukan FormData
       const response = await apiClient.put(`/product/${id}/edit-status`, {
-        status,
+        status: status ? 1 : 0, // Kirim 1 untuk true, 0 untuk false
       });
       return response.data;
     } catch (error) {
