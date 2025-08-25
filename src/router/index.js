@@ -48,7 +48,7 @@ const routes = [
       },
       {
         path: "store-management",
-        component: Dashboard, // Placeholder
+        component: () => import("@/features/toko/presentation/pages/StorePage.vue"),
         meta: { roles: ["superadmin"] },
       },
       {
