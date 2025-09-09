@@ -43,17 +43,20 @@ const routes = [
       },
       {
         path: "products",
-        component: () => import("@/features/product/presentation/pages/ProductPage.vue"), // Placeholder
+        component: () =>
+          import("@/features/product/presentation/pages/ProductPage.vue"), // Placeholder
         meta: { roles: ["superadmin", "admin"] },
       },
       {
         path: "store-management",
-        component: () => import("@/features/toko/presentation/pages/StorePage.vue"),
+        component: () =>
+          import("@/features/toko/presentation/pages/StorePage.vue"),
         meta: { roles: ["superadmin"] },
       },
       {
         path: "cashier-management",
-        component: Dashboard, // Placeholder
+        component: () =>
+          import("@/features/cashier/presentation/pages/CashierPage.vue"),
         meta: { roles: ["superadmin"] },
       },
       {
