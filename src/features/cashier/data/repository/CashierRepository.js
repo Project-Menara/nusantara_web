@@ -31,8 +31,7 @@ export class CashierRepository extends ICashierRepository {
   async createCashier(formData) {
     try {
       const response = await this.remoteSource.createCashier(formData);
-      // ✅ BENAR: Hasilnya dibungkus dengan right()
-      return right(CashierEntity.fromJSON(response.data));
+      return right(response.message);
     } catch (error) {
       return left(
         new ServerFailure(
@@ -59,8 +58,8 @@ export class CashierRepository extends ICashierRepository {
   async updateCashier(id, formData) {
     try {
       const response = await this.remoteSource.updateCashier(id, formData);
-      // ✅ BENAR: Hasilnya dibungkus dengan right()
-      return right(CashierEntity.fromJSON(response.data));
+      // Ganti dari CashierEntity.fromJSON menjadi langsung ambil pesan sukses
+      return right(response.message);
     } catch (error) {
       return left(
         new ServerFailure(

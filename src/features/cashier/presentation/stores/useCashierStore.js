@@ -1,15 +1,3 @@
-// import { defineStore } from "pinia";
-// import { ref } from "vue";
-// import { useModalStore } from "@/stores/modalStore";
-// import { CashierRepository } from "../../data/repository/CashierRepository";
-// import { GetCashiersUseCase } from "../../domain/use-case/GetCashiersUseCase";
-// import { CreateCashierUseCase } from "../../domain/use-case/CreateCashierUseCase";
-// import { UpdateCashierUseCase } from "../../domain/use-case/UpdateCashierUseCase";
-// import { DeleteCashierUseCase } from "../../domain/use-case/DeleteCashierUseCase";
-// import { GetCashierByIdUseCase } from "../../domain/use-case/GetCashierByIdUseCase";
-// import { UpdateCashierStatusUseCase } from "../../domain/use-case/UpdateCashierStatusUseCase";
-// import { mapFailureToMessage } from "@/core/error/map_failure_to_message";
-
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useModalStore } from "@/stores/modalStore";

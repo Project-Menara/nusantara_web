@@ -24,7 +24,7 @@ export class CashierRemoteSource {
   async updateCashier(id, formData) {
     // Gunakan POST dengan _method: 'PUT' untuk mengakomodasi file upload
     formData.append('_method', 'PUT');
-    const response = await apiClient.post(`/cashier/${id}/edit`, formData, {
+    const response = await apiClient.put(`/cashier/${id}/edit`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
