@@ -23,16 +23,28 @@ export class CashierRemoteSource {
 
   async updateCashier(id, formData) {
     // Gunakan POST dengan _method: 'PUT' untuk mengakomodasi file upload
-    formData.append('_method', 'PUT');
+    formData.append("_method", "PUT");
     const response = await apiClient.put(`/cashier/${id}/edit`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
   }
-  
+
   async updateCashierStatus(id, status) {
-    // Untuk update status, kita kirim JSON biasa
-    const response = await apiClient.put(`/cashier/${id}/edit`, { status });
+    // Buat objek FormData baru
+    const formData = new FormData();
+
+    // Tambahkan status ke dalamnya
+    formData.append("status", status ? 1 : 0);
+
+    // Tambahkan _method spoofing karena endpoint ini sama dengan edit utama
+    formData.append("_method", "PUT");
+
+    // Kirim sebagai multipart/form-data menggunakan POST ke endpoint edit
+    const response = await apiClient.put(`/cashier/${id}/edit`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
     return response.data;
   }
 
