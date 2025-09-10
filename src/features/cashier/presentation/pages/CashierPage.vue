@@ -47,7 +47,7 @@
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-5">
                 <!-- Card Loop -->
                 <div v-for="cashier in cashiers" :key="cashier.id"
-                    class="bg-white dark:bg-gray-800/50 rounded-2xl shadow-lg overflow-hidden flex flex-col transition-transform duration-300 hover:-translate-y-1 border border-gray-200 dark:border-gray-700/60">
+                    class="bg-white dark:bg-gray-800/50 rounded-2xl shadow-lg flex flex-col transition-transform duration-300 hover:-translate-y-1 border border-gray-200 dark:border-gray-700/60">
                     <img class="w-full h-56 object-cover object-center transition-all duration-300"
                         :class="{ 'grayscale': !cashier.isActive }"
                         :src="cashier.photo || 'https://via.placeholder.com/400x300.png?text=No+Image'"
