@@ -49,20 +49,22 @@
                     <form @submit.prevent="handleSubmit" class="space-y-6">
                         <!-- Step 1: Informasi & Lokasi -->
                         <div v-show="currentStep === 1">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
                                 <div>
                                     <label for="name" class="block text-sm font-medium mb-1">Nama Toko</label>
                                     <input v-model="formData.name" type="text" id="name" class="form-input w-full"
-                                        required />
+                                        placeholder="Toko Menara A" required />
                                 </div>
                                 <div>
                                     <label for="description" class="block text-sm font-medium mb-1">Deskripsi</label>
-                                    <input v-model="formData.description" type="text" id="description"
-                                        class="form-input w-full" required />
+                                    <textarea v-model="formData.description" type="text" id="description" rows="3"
+                                        class="form-textarea w-full"
+                                        placeholder="Contoh: Toko ini berada di sebelah komplek perumahan..."
+                                        required />
                                 </div>
                             </div>
                             <div>
-                                <h4 class="text-md font-semibold mb-2 text-gray-800 dark:text-gray-100">Lokasi Toko</h4>
+                                <!-- <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Lokasi Toko</h3> -->
                                 <LocationPicker :lat="lat" :lng="lng" :address="address" :initMap="initMap" />
                             </div>
                         </div>
@@ -85,7 +87,53 @@
                                     </template>
                                 </v-select>
                                 <div v-if="selectedProducts.length" class="mt-4">
-                                    <!-- Tabel Produk Terpilih -->
+                                    <div v-if="selectedProducts.length" class="mt-4 overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                                <tr>
+                                                    <th scope="col"
+                                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Nama Produk
+                                                    </th>
+                                                    <th scope="col"
+                                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Stok
+                                                    </th>
+                                                    <th scope="col"
+                                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Harga (Opsional)
+                                                    </th>
+                                                    <th scope="col" class="relative px-6 py-3">
+                                                        <span class="sr-only">Hapus</span>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody
+                                                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                                <tr v-for="(product, index) in selectedProducts" :key="product.id">
+                                                    <td
+                                                        class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                                        {{ product.name }}
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <input type="number" v-model.number="product.stock"
+                                                            class="form-input w-24" placeholder="0" />
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <input type="number" v-model.number="product.price"
+                                                            class="form-input w-36" placeholder="Harga jual..." />
+                                                    </td>
+                                                    <td
+                                                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <button @click="removeProductFromShop(index)" type="button"
+                                                            class="text-red-600 hover:text-red-900">
+                                                            Hapus
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -159,9 +207,9 @@ import "vue-select/dist/vue-select.css";
 // --- State Baru untuk Multi-Step Form ---
 const currentStep = ref(1);
 const steps = [
-    { title: 'Info & Lokasi', description: '' },
-    { title: 'Produk & Kasir', description: '' },
-    { title: 'Gambar', description: '' }
+    { title: 'Info & Lokasi', description: 'Detail dasar toko' },
+    { title: 'Produk & Kasir', description: 'Kelola staf dan item' },
+    { title: 'Gambar', description: 'Unggah cover dan galeri' }
 ];
 
 // --- Stores ---
@@ -179,13 +227,13 @@ const selectedCashierIds = ref([]);
 const selectedProducts = ref([]);
 const productToAdd = ref(null);
 const isFetchingRelatedData = ref(false);
+const originalData = ref(null);
 
 const coverFile = ref(null);
 const coverPreview = ref('');
-const galleryItems = ref([]); // { file: File|null, url: string, isExisting: boolean }
+const galleryItems = ref([]);
 const coverInput = ref(null);
 const galleryInput = ref(null);
-
 
 // --- Google Maps ---
 const { lat, lng, address, initMap } = useGoogleMaps();
@@ -197,35 +245,49 @@ const filteredProducts = computed(() => {
     );
 });
 
+const isStepValid = computed(() => {
+    if (currentStep.value === 1) {
+        return formData.value.name && formData.value.description && address.value;
+    }
+    if (currentStep.value === 2) {
+        return selectedCashierIds.value.length > 0 && selectedProducts.value.length > 0;
+    }
+    // Validasi langkah terakhir: mode create wajib ada cover
+    if (currentStep.value === 3 && !isEditMode.value) {
+        return !!coverFile.value;
+    }
+    return true;
+});
+
+
+// --- Functions ---
 function populateFormForEdit(shop) {
-    formData.value = { name: shop.name, description: shop.description };
-    lat.value = shop.lat;
-    lng.value = shop.lng;
-    address.value = shop.fullAddress;
-    selectedCashierIds.value = shop.cashiers.map(c => c.id);
-    selectedProducts.value = shop.products.map(p => ({
-        id: p.id, name: p.name, stock: p.stock || 0,
-        price: p.price || null, status: p.isActive ? 1 : 0,
-    }));
-    coverPreview.value = shop.cover;
-    galleryItems.value = shop.gallery.map(url => ({ file: null, url, isExisting: true }));
+    const dataToEdit = {
+        formData: { name: shop.name, description: shop.description },
+        lat: shop.lat,
+        lng: shop.lng,
+        address: shop.fullAddress,
+        cashierIds: shop.cashiers.map(c => c.id),
+        products: shop.products.map(p => ({
+            id: p.id, name: p.name, stock: p.stock || 0,
+            price: p.price || null, status: p.isActive ? 1 : 0,
+        })),
+        cover: shop.cover,
+        gallery: shop.gallery.map(url => ({ file: null, url, isExisting: true })),
+    };
+
+    formData.value = { ...dataToEdit.formData };
+    lat.value = dataToEdit.lat;
+    lng.value = dataToEdit.lng;
+    address.value = dataToEdit.address;
+    selectedCashierIds.value = [...dataToEdit.cashierIds];
+    selectedProducts.value = [...dataToEdit.products];
+    coverPreview.value = dataToEdit.cover;
+    galleryItems.value = [...dataToEdit.gallery];
+
+    originalData.value = JSON.parse(JSON.stringify(dataToEdit));
 }
 
-// --- Watchers ---
-watch(productToAdd, (newlySelectedProduct) => {
-    if (newlySelectedProduct) {
-        addProductToShop(newlySelectedProduct);
-        productToAdd.value = null;
-    }
-});
-
-watch(() => shopStore.isFormModalOpen, (isOpen) => {
-    if (isOpen) {
-        setupForm();
-    }
-});
-
-// --- Methods ---
 function resetForm() {
     formData.value = { name: '', description: '' };
     lat.value = -6.2088;
@@ -236,22 +298,31 @@ function resetForm() {
     coverFile.value = null;
     coverPreview.value = '';
     galleryItems.value = [];
-    currentStep.value = 1
+    currentStep.value = 1;
+    originalData.value = null;
     if (coverInput.value) coverInput.value.value = null;
     if (galleryInput.value) galleryInput.value.value = null;
 }
 
+// ✅ FUNGSI SETUP DIPERBAIKI
 async function setupForm() {
     isFetchingRelatedData.value = true;
+
+    // Langkah 1: Selalu ambil data terbaru untuk dropdown
     await Promise.all([
         cashierStore.fetchCashiers(1, '', true),
         productStore.fetchProducts(1, '', true)
     ]);
+
+    // Langkah 2: Setelah data siap, baru putuskan apakah akan mengisi form (edit) atau meresetnya (tambah)
     if (isEditMode.value && selectedShop.value) {
+        // Jika mode edit, isi form dengan data yang sudah ada di store
         populateFormForEdit(selectedShop.value);
     } else {
+        // Jika mode tambah, baru reset form ke kondisi awal
         resetForm();
     }
+
     isFetchingRelatedData.value = false;
 }
 
@@ -291,33 +362,13 @@ async function urlToBlob(url) {
     return blob;
 }
 
-// --- Computed untuk Validasi Langkah ---
-const isStepValid = computed(() => {
-    if (currentStep.value === 1) {
-        return formData.value.name && formData.value.description && address.value;
-    }
-    if (currentStep.value === 2) {
-        return selectedCashierIds.value.length > 0 && selectedProducts.value.length > 0;
-    }
-    return true; // Langkah 3 tidak ada validasi wajib sebelum submit
-});
-
-// --- Navigasi ---
-function nextStep() {
-    if (isStepValid.value && currentStep.value < steps.length) {
-        currentStep.value++;
-    }
-}
-
-function prevStep() {
-    if (currentStep.value > 1) {
-        currentStep.value--;
-    }
-}
-
 async function handleSubmit() {
-    const data = new FormData();
+    if (currentStep.value === 3 && !isStepValid.value) {
+        alert('Gambar Utama (Cover) wajib diisi.');
+        return;
+    }
 
+    const data = new FormData();
     data.append('name', formData.value.name);
     data.append('description', formData.value.description);
     data.append('full_address', address.value);
@@ -341,9 +392,9 @@ async function handleSubmit() {
     } else {
         if (coverFile.value) data.append('new_cover', coverFile.value);
 
-        const originalImageUrls = selectedShop.value?.gallery || [];
+        const originalImageUrls = originalData.value.gallery.map(item => item.url);
         const currentImageUrls = galleryItems.value.map(item => item.url);
-        const hasGalleryChanged = JSON.stringify(originalImageUrls) !== JSON.stringify(currentImageUrls.filter(url => !url.startsWith('blob:')));
+        const hasGalleryChanged = JSON.stringify(originalImageUrls) !== JSON.stringify(currentImageUrls);
 
         if (hasGalleryChanged) {
             data.append('replace_gallery', 'true');
@@ -367,4 +418,31 @@ async function handleSubmit() {
 const closeFormModal = () => {
     shopStore.isFormModalOpen = false;
 };
+
+// --- Watchers ---
+watch(productToAdd, (newlySelectedProduct) => {
+    if (newlySelectedProduct) {
+        addProductToShop(newlySelectedProduct);
+        productToAdd.value = null;
+    }
+});
+
+watch(() => shopStore.isFormModalOpen, (isOpen) => {
+    if (isOpen) {
+        setupForm();
+    }
+});
+
+// --- Navigasi ---
+function nextStep() {
+    if (isStepValid.value && currentStep.value < steps.length) {
+        currentStep.value++;
+    }
+}
+
+function prevStep() {
+    if (currentStep.value > 1) {
+        currentStep.value--;
+    }
+}
 </script>

@@ -57,8 +57,6 @@
     
     /* State Fokus (Saat diklik) */
     @apply focus:ring-2 focus:ring-inset focus:ring-violet-600;
-
-
 }
 
 .style-chooser .vs__selected-options {
@@ -68,7 +66,7 @@
 .style-chooser .vs__selected {
     @apply bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300 border-violet-200 dark:border-violet-500/30 m-1;
     padding: 0.25em 0.5em;
-    border-radius: 9999px;
+    border-radius: 10px;
 }
 
 .style-chooser .vs__search {
