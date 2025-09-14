@@ -30,7 +30,8 @@
     "vue": "^3.2.20",
     "vue-advanced-cropper": "^2.8.9",
     "vue-flatpickr-component": "^11.0.3",
-    "vue-router": "^4.2.5"
+    "vue-router": "^4.2.5",
+    "vue-select": "^4.0.0-beta.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",

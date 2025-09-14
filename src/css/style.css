@@ -44,6 +44,54 @@
   height: 0;
 }
 
+/* File: src/css/style.css */
+
+/* ✅ PERBAIKAN: Styling untuk vue-select agar cocok dengan form-input Tailwind */
+.style-chooser .vs__dropdown-toggle {
+
+    /* Warna Border */
+    @apply ring-1 ring-inset ring-gray-300 dark:ring-gray-700;
+
+    /* Warna Latar & Teks */
+    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-300;
+    
+    /* State Fokus (Saat diklik) */
+    @apply focus:ring-2 focus:ring-inset focus:ring-violet-600;
+
+
+}
+
+.style-chooser .vs__selected-options {
+    @apply flex-wrap p-1;
+}
+
+.style-chooser .vs__selected {
+    @apply bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300 border-violet-200 dark:border-violet-500/30 m-1;
+    padding: 0.25em 0.5em;
+    border-radius: 9999px;
+}
+
+.style-chooser .vs__search {
+    @apply text-gray-700 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 py-2 px-3;
+    margin: 0;
+}
+
+.style-chooser .vs__dropdown-menu {
+    @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700;
+}
+
+.style-chooser .vs__dropdown-option {
+    @apply text-gray-700 dark:text-gray-200;
+}
+
+.style-chooser .vs__dropdown-option--highlight {
+    @apply bg-violet-100 dark:bg-violet-500/30 text-violet-900 dark:text-violet-200;
+}
+
+.style-chooser .vs__clear, .style-chooser .vs__open-indicator {
+    fill: theme('colors.gray.500');
+}
+
 
 @theme {
   --shadow-sm: 0 1px 1px 0 rgb(0 0 0 / 0.05), 0 1px 2px 0 rgb(0 0 0 / 0.02);
