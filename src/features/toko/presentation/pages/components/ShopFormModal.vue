@@ -204,7 +204,7 @@ import { DialogTitle } from "@headlessui/vue";
 import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 
-// --- State Baru untuk Multi-Step Form ---
+// --- State Multi-Step Form ---
 const currentStep = ref(1);
 const steps = [
     { title: 'Info & Lokasi', description: 'Detail dasar toko' },
@@ -229,13 +229,14 @@ const productToAdd = ref(null);
 const isFetchingRelatedData = ref(false);
 const originalData = ref(null);
 
+// --- State Gambar Disesuaikan Seperti ProductForm ---
 const coverFile = ref(null);
 const coverPreview = ref('');
-const galleryItems = ref([]);
+const galleryItems = ref([]); // { file: File|null, url: string, isExisting: boolean }
+const deletedGalleryUrls = ref(new Set());
 const coverInput = ref(null);
 const galleryInput = ref(null);
 
-// --- Google Maps ---
 const { lat, lng, address, initMap } = useGoogleMaps();
 
 // --- Computed ---
@@ -252,17 +253,36 @@ const isStepValid = computed(() => {
     if (currentStep.value === 2) {
         return selectedCashierIds.value.length > 0 && selectedProducts.value.length > 0;
     }
-    // Validasi langkah terakhir: mode create wajib ada cover
     if (currentStep.value === 3 && !isEditMode.value) {
         return !!coverFile.value;
     }
     return true;
 });
 
+const isButtonDisabled = computed(() => {
+    if (shopStore.isFormLoading || isFetchingRelatedData.value) return true;
+    if (currentStep.value !== steps.length) return false;
+
+    if (isEditMode.value) {
+        if (!originalData.value) return true;
+
+        const hasDataChanged = JSON.stringify(formData.value) !== JSON.stringify(originalData.value.formData) ||
+            JSON.stringify(selectedCashierIds.value) !== JSON.stringify(originalData.value.cashierIds) ||
+            JSON.stringify(selectedProducts.value) !== JSON.stringify(originalData.value.products);
+
+        const hasNewCover = !!coverFile.value;
+        const hasNewGalleryFiles = galleryItems.value.some(item => !item.isExisting);
+        const hasDeletedGalleryImages = deletedGalleryUrls.value.size > 0;
+
+        return !hasDataChanged && !hasNewCover && !hasNewGalleryFiles && !hasDeletedGalleryImages;
+    } else {
+        return !isStepValid.value;
+    }
+});
 
 // --- Functions ---
 function populateFormForEdit(shop) {
-    const dataToEdit = {
+    const dataToStore = {
         formData: { name: shop.name, description: shop.description },
         lat: shop.lat,
         lng: shop.lng,
@@ -275,17 +295,16 @@ function populateFormForEdit(shop) {
         cover: shop.cover,
         gallery: shop.gallery.map(url => ({ file: null, url, isExisting: true })),
     };
+    originalData.value = JSON.parse(JSON.stringify(dataToStore));
 
-    formData.value = { ...dataToEdit.formData };
-    lat.value = dataToEdit.lat;
-    lng.value = dataToEdit.lng;
-    address.value = dataToEdit.address;
-    selectedCashierIds.value = [...dataToEdit.cashierIds];
-    selectedProducts.value = [...dataToEdit.products];
-    coverPreview.value = dataToEdit.cover;
-    galleryItems.value = [...dataToEdit.gallery];
-
-    originalData.value = JSON.parse(JSON.stringify(dataToEdit));
+    formData.value = dataToStore.formData;
+    lat.value = dataToStore.lat;
+    lng.value = dataToStore.lng;
+    address.value = dataToStore.address;
+    selectedCashierIds.value = dataToStore.cashierIds;
+    selectedProducts.value = dataToStore.products;
+    coverPreview.value = dataToStore.cover;
+    galleryItems.value = dataToStore.gallery;
 }
 
 function resetForm() {
@@ -298,31 +317,23 @@ function resetForm() {
     coverFile.value = null;
     coverPreview.value = '';
     galleryItems.value = [];
+    deletedGalleryUrls.value.clear();
     currentStep.value = 1;
     originalData.value = null;
     if (coverInput.value) coverInput.value.value = null;
     if (galleryInput.value) galleryInput.value.value = null;
 }
 
-// ✅ FUNGSI SETUP DIPERBAIKI
 async function setupForm() {
     isFetchingRelatedData.value = true;
-
-    // Langkah 1: Selalu ambil data terbaru untuk dropdown
+    resetForm();
     await Promise.all([
         cashierStore.fetchCashiers(1, '', true),
         productStore.fetchProducts(1, '', true)
     ]);
-
-    // Langkah 2: Setelah data siap, baru putuskan apakah akan mengisi form (edit) atau meresetnya (tambah)
     if (isEditMode.value && selectedShop.value) {
-        // Jika mode edit, isi form dengan data yang sudah ada di store
         populateFormForEdit(selectedShop.value);
-    } else {
-        // Jika mode tambah, baru reset form ke kondisi awal
-        resetForm();
     }
-
     isFetchingRelatedData.value = false;
 }
 
@@ -342,13 +353,16 @@ function handleGalleryFilesChange(event) {
 }
 
 function removeGalleryImage(index) {
+    const removedItem = galleryItems.value[index];
+    if (removedItem && removedItem.isExisting) {
+        deletedGalleryUrls.value.add(removedItem.url);
+    }
     galleryItems.value.splice(index, 1);
 }
 
 function addProductToShop(product) {
     selectedProducts.value.push({
-        id: product.id, name: product.name, stock: 0,
-        price: null, status: 1,
+        id: product.id, name: product.name, stock: 0, price: null, status: 1,
     });
 }
 
@@ -357,25 +371,20 @@ function removeProductFromShop(index) {
 }
 
 async function urlToBlob(url) {
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: 'no-cache' });
     const blob = await response.blob();
     return blob;
 }
 
 async function handleSubmit() {
-    if (currentStep.value === 3 && !isStepValid.value) {
-        alert('Gambar Utama (Cover) wajib diisi.');
-        return;
-    }
-
     const data = new FormData();
     data.append('name', formData.value.name);
     data.append('description', formData.value.description);
     data.append('full_address', address.value);
     data.append('lat', lat.value);
     data.append('lang', lng.value);
-
     data.append('cashier_ids', JSON.stringify(selectedCashierIds.value));
+
     const productsPayload = selectedProducts.value.map(p => ({
         product_id: p.id, stock: p.stock,
         ...(p.price && { price: p.price }),
@@ -390,27 +399,42 @@ async function handleSubmit() {
             if (item.file) data.append('gallery', item.file);
         });
     } else {
-        if (coverFile.value) data.append('new_cover', coverFile.value);
+        if (coverFile.value) data.append('cover', coverFile.value);
 
-        const originalImageUrls = originalData.value.gallery.map(item => item.url);
-        const currentImageUrls = galleryItems.value.map(item => item.url);
-        const hasGalleryChanged = JSON.stringify(originalImageUrls) !== JSON.stringify(currentImageUrls);
+        const hasNewGalleryFiles = galleryItems.value.some(item => !item.isExisting);
+        const hasDeletedGalleryImages = deletedGalleryUrls.value.size > 0;
 
-        if (hasGalleryChanged) {
+        if (hasNewGalleryFiles || hasDeletedGalleryImages) {
             data.append('replace_gallery', 'true');
-            for (const item of galleryItems.value) {
-                if (item.file) {
-                    data.append('new_gallery', item.file);
-                } else {
-                    const blob = await urlToBlob(item.url);
-                    const fileName = item.url.substring(item.url.lastIndexOf('/') + 1);
-                    data.append('new_gallery', blob, fileName);
-                }
+
+            const existingUrlsToKeep = originalData.value.gallery
+                .map(item => item.url)
+                .filter(url => !deletedGalleryUrls.value.has(url));
+
+            const newGalleryItems = galleryItems.value.filter(item => !item.isExisting);
+
+            for (const url of existingUrlsToKeep) {
+                const blob = await urlToBlob(url);
+                const fileName = url.substring(url.lastIndexOf('/') + 1);
+                data.append('gallery', blob, fileName);
             }
+
+            for (const item of newGalleryItems) {
+                if (item.file) data.append('gallery', item.file);
+            }
+
         } else {
             data.append('replace_gallery', 'false');
         }
     }
+
+    // --- ✅ BLOK DEBUGGING ---
+    console.log("--- Payload FormData yang akan dikirim ---");
+    for (const [key, value] of data.entries()) {
+        console.log(`${key}:`, value);
+    }
+    console.log("-----------------------------------------");
+    // Hapus atau komentari bagian ini setelah selesai debugging
 
     await shopStore.submitShop(data);
 }
