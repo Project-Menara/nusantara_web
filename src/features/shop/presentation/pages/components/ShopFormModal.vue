@@ -179,8 +179,13 @@
                     <button v-if="currentStep < steps.length" @click="nextStep" type="button"
                         class="btn bg-violet-500 hover:bg-violet-600 text-white"
                         :disabled="!isStepValid">Berikutnya</button>
-                    <button v-if="currentStep === steps.length" @click="handleSubmit"
+                    <!-- <button v-if="currentStep === steps.length" @click="handleSubmit"
                         :disabled="shopStore.isFormLoading || isFetchingRelatedData"
+                        class="btn bg-violet-500 hover:bg-violet-600 text-white">
+                        <span v-if="shopStore.isFormLoading">Menyimpan...</span>
+                        <span v-else>{{ isEditMode ? "Simpan Perubahan" : "Tambah Toko" }}</span>
+                    </button> -->
+                    <button v-if="currentStep === steps.length" @click="handleSubmit" :disabled="isButtonDisabled"
                         class="btn bg-violet-500 hover:bg-violet-600 text-white">
                         <span v-if="shopStore.isFormLoading">Menyimpan...</span>
                         <span v-else>{{ isEditMode ? "Simpan Perubahan" : "Tambah Toko" }}</span>
@@ -229,10 +234,9 @@ const productToAdd = ref(null);
 const isFetchingRelatedData = ref(false);
 const originalData = ref(null);
 
-// --- State Gambar Disesuaikan Seperti ProductForm ---
 const coverFile = ref(null);
 const coverPreview = ref('');
-const galleryItems = ref([]); // { file: File|null, url: string, isExisting: boolean }
+const galleryItems = ref([]);
 const deletedGalleryUrls = ref(new Set());
 const coverInput = ref(null);
 const galleryInput = ref(null);
@@ -404,31 +408,30 @@ async function handleSubmit() {
         const hasNewGalleryFiles = galleryItems.value.some(item => !item.isExisting);
         const hasDeletedGalleryImages = deletedGalleryUrls.value.size > 0;
 
-        if (hasNewGalleryFiles || hasDeletedGalleryImages) {
-            data.append('replace_gallery', 'true');
-
-            const existingUrlsToKeep = originalData.value.gallery
-                .map(item => item.url)
-                .filter(url => !deletedGalleryUrls.value.has(url));
-
-            const newGalleryItems = galleryItems.value.filter(item => !item.isExisting);
-
-            for (const url of existingUrlsToKeep) {
-                const blob = await urlToBlob(url);
-                const fileName = url.substring(url.lastIndexOf('/') + 1);
-                data.append('gallery', blob, fileName);
-            }
-
-            for (const item of newGalleryItems) {
+        if (hasNewGalleryFiles && !hasDeletedGalleryImages) {
+            // Hanya tambah, JANGAN kirim replace_gallery
+            const newFiles = galleryItems.value.filter(item => !item.isExisting);
+            newFiles.forEach(item => {
                 if (item.file) data.append('gallery', item.file);
+            });
+        }
+        else if (hasDeletedGalleryImages) {
+            // Ada yg dihapus (atau dihapus & ditambah), ganti total
+            data.append('replace_gallery', 'true');
+            const finalGalleryItems = galleryItems.value;
+            for (const item of finalGalleryItems) {
+                if (item.file) {
+                    data.append('gallery', item.file);
+                } else {
+                    const blob = await urlToBlob(item.url);
+                    const fileName = item.url.substring(item.url.lastIndexOf('/') + 1);
+                    data.append('gallery', blob, fileName);
+                }
             }
-
-        } else {
-            data.append('replace_gallery', 'false');
         }
     }
 
-    // --- ✅ BLOK DEBUGGING ---
+    // --- ✅ BLOK DEBUGGING DITAMBAHKAN DI SINI ---
     console.log("--- Payload FormData yang akan dikirim ---");
     for (const [key, value] of data.entries()) {
         console.log(`${key}:`, value);

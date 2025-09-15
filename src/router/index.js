@@ -50,7 +50,7 @@ const routes = [
       {
         path: "store-management",
         component: () =>
-          import("@/features/toko/presentation/pages/StorePage.vue"),
+          import("@/features/shop/presentation/pages/StorePage.vue"),
         meta: { roles: ["superadmin"] },
       },
       {
