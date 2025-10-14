@@ -83,7 +83,8 @@ const routes = [
       },
       {
         path: "events",
-        component: Dashboard, // Placeholder
+        component: () =>
+          import("@/features/event/presentation/pages/EventPage.vue"), // Placeholder
         meta: { roles: ["superadmin"] },
       },
       {
