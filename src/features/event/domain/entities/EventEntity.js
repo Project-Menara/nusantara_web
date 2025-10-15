@@ -37,11 +37,25 @@ export class EventBundleItemEntity {
   }
 }
 
-// Entitas utama
+// ✅ ENTITAS BARU untuk produk diskon
+export class EventProductDiscountEntity {
+  constructor({ id, event, product, discountPercent, createdAt, updatedAt, deletedAt }) {
+    this.id = id;
+    this.event = event;
+    this.product = product ? new ProductEntity(product) : null;
+    this.discountPercent = discountPercent;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+    this.deletedAt = deletedAt;
+  }
+}
+
+// Entitas utama (diperbarui)
 export class EventEntity {
   constructor({
     id, name, typeEvent, startDate, endDate, cover, status,
-    eventProduct, eventBundleBuy, eventBundleReward,
+    eventProducts, // ✅ Ganti eventProduct menjadi eventProducts
+    eventBundleBuy, eventBundleReward,
     createdBy, createdAt, updatedAt, deletedAt
   }) {
     this.id = id;
@@ -50,9 +64,11 @@ export class EventEntity {
     this.startDate = startDate;
     this.endDate = endDate;
     this.cover = cover;
-    this.status = status; // Kita biarkan 0/1 sesuai API, mapping ke boolean bisa di-handle di presentation jika perlu
-    this.eventProduct = eventProduct;
-    // Map array ke entitas yang sesuai
+    this.status = status;
+    
+    // ✅ Map array produk diskon ke entitas yang sesuai
+    this.eventProducts = eventProducts?.map(item => new EventProductDiscountEntity(item)) || [];
+    
     this.eventBundleBuy = eventBundleBuy?.map(item => new EventBundleItemEntity(item)) || [];
     this.eventBundleReward = eventBundleReward?.map(item => new EventBundleItemEntity(item)) || [];
     this.createdBy = createdBy;

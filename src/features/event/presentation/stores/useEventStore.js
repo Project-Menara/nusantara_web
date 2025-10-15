@@ -91,11 +91,11 @@ export const useEventStore = defineStore("event", () => {
   async function submitEvent(formData) {
     isFormLoading.value = true;
     const isEditMode = !!selectedEvent.value?.id;
+    
+    // Untuk 'update', kita asumsikan API mengembalikan data event lengkap,
+    // jadi kita hanya perlu mengubah logika 'create'.
     const useCase = isEditMode ? updateEventUseCase : createEventUseCase;
-    const params = isEditMode
-      ? [selectedEvent.value.id, formData]
-      : [formData];
-
+    const params = isEditMode ? [selectedEvent.value.id, formData] : [formData];
     const result = await useCase.execute(...params);
     isFormLoading.value = false;
 
@@ -105,15 +105,20 @@ export const useEventStore = defineStore("event", () => {
         newMessage: mapFailureToMessage(result.left),
         newStatus: "error",
       });
-      throw result.left; // Lempar error agar bisa di-handle di komponen jika perlu
+      throw result.left;
     } else {
       modalStore.openModal({
         newTitle: "Berhasil",
+        // Pesan ini tetap relevan
         newMessage: `Event berhasil ${isEditMode ? "diperbarui" : "dibuat"}.`,
         newStatus: "success",
       });
       isFormModalOpen.value = false;
-      fetchEvents({ page: pagination.value?.currentPage || 1, search: searchQuery.value });
+
+      // ✅ TINDAKAN KUNCI: Panggil fetchEvents untuk memuat ulang data.
+      // Ini akan menampilkan event yang baru dibuat di tabel.
+      // Sebaiknya fetch dari halaman pertama untuk melihat data terbaru.
+      fetchEvents({ page: 1, search: "" }); 
     }
   }
 

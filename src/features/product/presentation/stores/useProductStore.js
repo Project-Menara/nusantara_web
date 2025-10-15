@@ -107,7 +107,6 @@ export const useProductStore = defineStore("Product", () => {
       setTimeout(() => {
         fetchProducts(pagination.value?.currentPage || 1, searchQuery.value);
       }, 2000);
-      // fetchProducts(pagination.value?.currentPage || 1, searchQuery.value);
     }
   }
 

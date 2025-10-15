@@ -1,6 +1,6 @@
 // data/model/EventResponseModel.js
 import { EventEntity, EventBundleItemEntity, ProductEntity } from '../../../event/domain/entities/EventEntity';
-import { PaginationEntity } from "@/core/domain/entities/PaginationEntity"; // Sesuaikan path jika perlu
+import { PaginationEntity } from "@/core/domain/entities/PaginationEntity";
 
 // Helper mapper untuk Product
 const mapProduct = (item) => new ProductEntity({
@@ -15,6 +15,17 @@ const mapEventBundleItem = (item) => new EventBundleItemEntity({
     id: item.id, event: item.event,
     product: item.product ? mapProduct(item.product) : null,
     quantity: item.quantity, createdAt: item.created_at, updatedAt: item.updated_at, deletedAt: item.deleted_at
+});
+
+// ✅ HELPER MAPPER BARU untuk event_products
+const mapEventProductDiscount = (item) => new EventProductDiscountEntity({
+    id: item.id,
+    event: item.event,
+    product: item.product ? mapProduct(item.product) : null,
+    discountPercent: item.discount_percent, // snake_case dari API
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+    deletedAt: item.deleted_at
 });
 
 export class EventResponseModel {
@@ -32,7 +43,8 @@ export class EventResponseModel {
       endDate: item.end_date,
       cover: item.cover,
       status: item.status,
-      eventProduct: item.event_product,
+      // ✅ Map properti event_products dari API
+      eventProducts: item.event_products?.map(mapEventProductDiscount), 
       eventBundleBuy: item.event_bundle_buy?.map(mapEventBundleItem),
       eventBundleReward: item.event_bundle_reward?.map(mapEventBundleItem),
       createdBy: item.created_by,

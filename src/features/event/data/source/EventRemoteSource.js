@@ -1,5 +1,5 @@
 // data/source/EventRemoteSource.js
-import apiClient from "@/lib/apiClient.js"; // Menggunakan apiClient seperti contoh Anda
+import apiClient from "@/lib/apiClient.js";
 
 export class EventRemoteSource {
   async getEvents(params) {
@@ -21,10 +21,9 @@ export class EventRemoteSource {
   }
 
   async updateEvent(id, data) {
-    // Sesuai spesifikasi Anda: POST dengan _method: 'PUT'
-    data.append('_method', 'PUT');
+   
     
-    const response = await apiClient.post(`/event/${id}/edit`, data, {
+    const response = await apiClient.put(`/event/${id}/edit`, data, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data;

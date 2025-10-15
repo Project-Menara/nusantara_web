@@ -2,7 +2,7 @@
 import { IEventRepository } from '../../domain/repository/IEventRepository';
 import { EventRemoteSource } from '../source/EventRemoteSource';
 import { EventResponseModel } from '../model/EventResponseModel';
-import { EventEntity, ProductEntity, EventBundleItemEntity } from '../../../event/domain/entities/EventEntity';
+import { EventEntity, ProductEntity, EventBundleItemEntity, EventProductDiscountEntity } from '../../../event/domain/entities/EventEntity';
 import { left, right } from '@/core/error/failure';
 import { ServerFailure } from '@/core/error/failure';
 
@@ -22,6 +22,17 @@ const mapSingleResponseToEntity = (data) => {
         quantity: item.quantity, createdAt: item.created_at, updatedAt: item.updated_at, deletedAt: item.deleted_at
     });
 
+    // ✅ HELPER MAPPER BARU di sini juga
+    const mapEventProductDiscount = (item) => new EventProductDiscountEntity({
+        id: item.id,
+        event: item.event,
+        product: item.product ? mapProduct(item.product) : null,
+        discountPercent: item.discount_percent,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+        deletedAt: item.deleted_at
+    });
+
     return new EventEntity({
         id: data.id,
         name: data.name,
@@ -30,7 +41,7 @@ const mapSingleResponseToEntity = (data) => {
         endDate: data.end_date,
         cover: data.cover,
         status: data.status,
-        eventProduct: data.event_product,
+        eventProducts: data.event_product?.map(mapEventProductDiscount),
         eventBundleBuy: data.event_bundle_buy?.map(mapEventBundleItem),
         eventBundleReward: data.event_bundle_reward?.map(mapEventBundleItem),
         createdBy: data.created_by,
@@ -72,8 +83,9 @@ export class EventRepository extends IEventRepository {
   async createEvent(data) {
     try {
       const response = await this.remoteSource.createEvent(data);
-      const newEntity = mapSingleResponseToEntity(response.data);
-      return right(newEntity);
+      
+      return right({ message: response.message });
+
     } catch (error) {
       return left(new ServerFailure(error.response?.data?.message || "Gagal membuat event."));
     }
@@ -82,8 +94,11 @@ export class EventRepository extends IEventRepository {
   async updateEvent(id, data) {
     try {
       const response = await this.remoteSource.updateEvent(id, data);
-      const updatedEntity = mapSingleResponseToEntity(response.data);
-      return right(updatedEntity);
+      
+      // ✅ PERBAIKAN: Ganti baris ini.
+      // Jangan lagi mencoba memetakan ke entity, cukup kembalikan pesan sukses.
+      return right({ message: response.message });
+
     } catch (error) {
       return left(new ServerFailure(error.response?.data?.message || "Gagal memperbarui event."));
     }
