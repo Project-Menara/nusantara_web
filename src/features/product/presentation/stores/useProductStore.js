@@ -12,14 +12,18 @@ import { mapFailureToMessage } from "@/core/error/map_failure_to_message";
 
 export const useProductStore = defineStore("Product", () => {
   const products = ref([]);
-  // const pagination = ref(null);
   const pagination = ref({
     currentPage: 1,
     perPage: 10,
     totalData: 0,
     totalPages: 1,
   });
-  const isLoading = ref(false);
+
+  const isLoading = ref(false); // untuk loading awal
+  const isLoadingMore = ref(false); // Khusus untuk infinite scroll
+  const hasMorePages = computed(() => pagination.value.currentPage < pagination.value.totalPages);
+  const currentSearchQuery = ref("");
+
   const isFormModalOpen = ref(false);
   const selectedProduct = ref(null);
   const isFormLoading = ref(false);
@@ -51,6 +55,50 @@ export const useProductStore = defineStore("Product", () => {
         newMessage: mapFailureToMessage(result.left),
         newStatus: "error",
       });
+    }
+  }
+
+  async function searchProducts(search = "") {
+    currentSearchQuery.value = search;
+    isLoading.value = true;
+    products.value = []; // Kosongkan daftar untuk pencarian baru
+
+    const result = await getProductsUseCase.execute(1, search); // Selalu mulai dari halaman 1
+
+    isLoading.value = false;
+    if (result.right) {
+      products.value = result.right.products;
+      pagination.value = result.right.pagination;
+    } else {
+      const message = mapFailureToMessage(result.left);
+      modalStore.openModal({ newTitle: "Error", newMessage: message, newStatus: "error" });
+    }
+  }
+
+  /**
+   * Aksi untuk memuat halaman produk berikutnya.
+   * Aksi ini akan MENAMBAHKAN produk ke daftar yang sudah ada.
+   */
+  async function loadMoreProducts() {
+    // Guard clauses: jangan lakukan apa-apa jika...
+    // 1. Sedang loading
+    // 2. Tidak ada halaman lagi
+    if (isLoadingMore.value || !hasMorePages.value) {
+      return;
+    }
+
+    const nextPage = pagination.value.currentPage + 1;
+    isLoadingMore.value = true;
+    
+    const result = await getProductsUseCase.execute(nextPage, currentSearchQuery.value);
+    
+    isLoadingMore.value = false;
+    if (result.right) {
+      products.value.push(...result.right.products); // Tambahkan data baru ke array
+      pagination.value = result.right.pagination; // Perbarui info paginasi
+    } else {
+      const message = mapFailureToMessage(result.left);
+      modalStore.openModal({ newTitle: "Error", newMessage: message, newStatus: "error" });
     }
   }
 
@@ -172,5 +220,8 @@ export const useProductStore = defineStore("Product", () => {
     submitProduct,
     removeProduct,
     toggleProductStatus,
+
+    searchProducts,
+    loadMoreProducts,
   };
 });

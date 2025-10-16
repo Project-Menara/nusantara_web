@@ -35,11 +35,7 @@
               <input v-model="formData.endDate" type="datetime-local" class="form-input w-full" required />
             </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Cover</label>
-            <input @change="handleFileChange" type="file" class="form-input" accept="image/*" />
-            <img v-if="previewUrl" :src="previewUrl" class="h-24 w-48 mt-2 object-cover rounded" />
-          </div>
+          
 
           <div v-if="formData.typeEvent === 'BUNDLE'" class="space-y-4 pt-4 border-t">
             <div>
@@ -76,6 +72,11 @@
                   <button @click="removeDiscountItem(index)" type="button" class="text-red-500">&times;</button>
                 </div>
               </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Cover</label>
+            <input @change="handleFileChange" type="file" class="form-input" accept="image/*" />
+            <img v-if="previewUrl" :src="previewUrl" class="h-24 w-48 mt-2 object-cover rounded" />
           </div>
         </form>
       </div>
