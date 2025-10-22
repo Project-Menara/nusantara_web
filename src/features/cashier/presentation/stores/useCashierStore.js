@@ -40,6 +40,7 @@ export const useCashierStore = defineStore("cashier", () => {
     isLoading.value = false;
 
     if (result.right) {
+      console.log(result.right.pagination);
       cashiers.value = result.right.cashiers;
       pagination.value = result.right.pagination;
     } else {

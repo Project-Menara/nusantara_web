@@ -40,6 +40,7 @@ export const useShopStore = defineStore("shop", () => {
     isLoading.value = false;
 
     if (result.right) {
+      console.log("Data pagination diterima:", result.right.pagination);
       shops.value = result.right.shops;
       pagination.value = result.right.pagination;
     } else {

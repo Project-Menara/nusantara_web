@@ -9,7 +9,12 @@ export class ShopResponseModel {
 
   static fromJSON(json) {
     const shops = json.data.map(item => ShopEntity.fromJSON(item));
-    const pagination = new PaginationEntity(json.pagination);
+    const pagination = new PaginationEntity({
+      currentPage: json.pagination.current_page,
+      perPage: json.pagination.per_page,
+      totalData: json.pagination.total_data,
+      totalPages: json.pagination.total_pages
+    });
     return new ShopResponseModel({ shops, pagination });
   }
 }
