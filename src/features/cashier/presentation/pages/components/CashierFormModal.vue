@@ -37,7 +37,7 @@
       </div>
     </template>
     <template #footer>
-        <button @click="closeFormModal" type="button" class="btn border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200">Batal</button>
+        <button @click="closeFormModal" type="button" class="btn border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:border-gray-400 dark:hover:border-gray-500">Batal</button>
         <div class="relative inline-block group">
             <button @click="handleSubmit" :disabled="isButtonDisabled" class="btn bg-violet-500 hover:bg-violet-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed">
                 <span v-if="cashierStore.isFormLoading" class="flex items-center">

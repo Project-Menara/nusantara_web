@@ -13,8 +13,6 @@
                 <span class="hidden xs:block ml-2">Tambah Kasir</span>
             </button>
         </div>
-
-        <!-- ✅ PERBAIKAN: Tambahkan header dengan search bar di atas grid -->
         <header
             class="bg-white dark:bg-gray-800 shadow-lg rounded-t-lg px-5 py-4 border-b border-gray-100 dark:border-gray-700/60">
             <div class="relative">

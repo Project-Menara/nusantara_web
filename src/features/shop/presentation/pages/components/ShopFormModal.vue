@@ -169,24 +169,24 @@
 
         <template #footer>
             <div class="flex justify-between w-full">
-                <!-- Tombol Kembali -->
                 <button v-if="currentStep > 1" @click="prevStep" type="button"
-                    class="btn border-gray-300 dark:border-gray-600">Kembali</button>
-                <div v-else></div> <!-- Placeholder untuk menjaga layout -->
+                    class="btn border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:border-gray-400 dark:hover:border-gray-500">Kembali</button>
+                <div v-else></div> <div>
+                    <div v-if="currentStep < steps.length" class="relative inline-block group">
+                        <button @click="nextStep" type="button"
+                            class="btn bg-violet-500 hover:bg-violet-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed" 
+                            :disabled="!isStepValid"> Berikutnya
+                        </button>
+                        <span
+                            v-if="!isStepValid && !shopStore.isFormLoading && !isFetchingRelatedData" 
+                            class="absolute bottom-full right-0 mb-2 w-max max-w-xs px-3 py-1.5 bg-gray-700 text-white text-xs rounded-md shadow-lg invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-300 z-50 text-center"
+                        >
+                            {{ nextButtonTooltipMessage }}
+                        </span>
+                    </div>
 
-                <!-- Tombol Berikutnya / Simpan -->
-                <div>
-                    <button v-if="currentStep < steps.length" @click="nextStep" type="button"
-                        class="btn bg-violet-500 hover:bg-violet-600 text-white"
-                        :disabled="!isStepValid">Berikutnya</button>
-                    <!-- <button v-if="currentStep === steps.length" @click="handleSubmit"
-                        :disabled="shopStore.isFormLoading || isFetchingRelatedData"
-                        class="btn bg-violet-500 hover:bg-violet-600 text-white">
-                        <span v-if="shopStore.isFormLoading">Menyimpan...</span>
-                        <span v-else>{{ isEditMode ? "Simpan Perubahan" : "Tambah Toko" }}</span>
-                    </button> -->
                     <button v-if="currentStep === steps.length" @click="handleSubmit" :disabled="isButtonDisabled"
-                        class="btn bg-violet-500 hover:bg-violet-600 text-white">
+                        class="btn bg-violet-500 hover:bg-violet-600 text-white disabled:bg-gray-400">
                         <span v-if="shopStore.isFormLoading">Menyimpan...</span>
                         <span v-else>{{ isEditMode ? "Simpan Perubahan" : "Tambah Toko" }}</span>
                     </button>
@@ -255,12 +255,33 @@ const isStepValid = computed(() => {
         return formData.value.name && formData.value.description && address.value;
     }
     if (currentStep.value === 2) {
+        // Validasi tambahan: Pastikan setiap produk terpilih memiliki stok (misalnya >= 0)
+        const allProductsHaveStock = selectedProducts.value.every(p => typeof p.stock === 'number' && p.stock >= 0);
         return selectedCashierIds.value.length > 0 && selectedProducts.value.length > 0;
     }
     if (currentStep.value === 3 && !isEditMode.value) {
         return !!coverFile.value;
     }
     return true;
+});
+
+// ✅ BUAT COMPUTED PROPERTY BARU UNTUK TOOLTIP
+const nextButtonTooltipMessage = computed(() => {
+    if (shopStore.isFormLoading || isFetchingRelatedData.value) return '';
+
+    if (currentStep.value === 1) {
+        if (!formData.value.name) return "Nama toko wajib diisi.";
+        if (!formData.value.description) return "Deskripsi wajib diisi.";
+        if (!address.value) return "Lokasi wajib dipilih pada peta.";
+    }
+    if (currentStep.value === 2) {
+        if (selectedCashierIds.value.length === 0) return "Pilih minimal satu kasir.";
+        if (selectedProducts.value.length === 0) return "Pilih minimal satu produk.";
+        // Contoh validasi tambahan jika Anda ingin stok diisi sebelum lanjut
+        const productWithoutStock = selectedProducts.value.find(p => typeof p.stock !== 'number' || p.stock < 0);
+        if (productWithoutStock) return `Stok untuk produk "${productWithoutStock.name}" harus diisi (minimal 0).`;
+    }
+    return "Lengkapi semua data yang diperlukan di langkah ini."; // Fallback
 });
 
 const isButtonDisabled = computed(() => {

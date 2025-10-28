@@ -82,7 +82,7 @@
       </div>
     </template>
     <template #footer>
-      <button @click="closeFormModal" type="button" class="btn border-gray-300 text-gray-700">Batal</button>
+      <button @click="closeFormModal" type="button" class="btn border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:border-gray-400 dark:hover:border-gray-500">Batal</button>
       <button @click="handleSubmit" :disabled="eventStore.isFormLoading" class="btn bg-violet-500 text-white">
         {{ isEditMode ? "Simpan Perubahan" : "Tambah" }}
       </button>
