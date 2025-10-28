@@ -60,6 +60,7 @@
               <StatusDropdown :item="shop" :isLoading="statusLoadingId === shop.id"
                 @toggle="shopStore.toggleShopStatus(shop)" />
               <div class="flex space-x-2">
+                
                 <button @click="shopStore.openFormModal(shop.id)"
                   class="p-2 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400"
                   title="Edit Toko">
@@ -70,6 +71,7 @@
                       clip-rule="evenodd"></path>
                   </svg>
                 </button>
+
                 <button @click="openDeleteModal(shop.id)"
                   class="p-2 rounded-full bg-red-100 dark:bg-red-500/30 text-red-500 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/40"
                   title="Hapus Toko">

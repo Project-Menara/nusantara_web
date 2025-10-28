@@ -56,15 +56,41 @@
                         <p class="text-sm text-gray-500 truncate">{{ cashier.email }}</p>
 
 
-                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/60 flex flex-col gap-2">
+                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/60 flex justify-between items-center">
+    <StatusDropdown 
+        :item="cashier" 
+        :isLoading="statusLoadingId === cashier.id"
+        @toggle="cashierStore.toggleCashierStatus(cashier)" 
+    />
+    <div class="flex space-x-2">
+        <button 
+            @click="cashierStore.openFormModal(cashier.id)"
+            class="p-2 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400"
+            title="Edit Kasir">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path>
+                <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path>
+            </svg>
+        </button>
+        <button 
+            @click="openDeleteModal(cashier.id)"
+            class="p-2 rounded-full bg-red-100 dark:bg-red-500/30 text-red-500 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/40"
+            title="Hapus Kasir">
+             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+        </button>
+    </div>
+</div>
+                        <!-- <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/60 flex justify-between items-center">
                             <div class="flex space-x-2">
                                 <StatusDropdown :item="cashier" :isLoading="statusLoadingId === cashier.id"
                                     @toggle="cashierStore.toggleCashierStatus(cashier)" />
-                                <!-- Tombol Edit (Ikon) -->
+                               
                                 <button @click="cashierStore.openFormModal(cashier.id)"
-                                    class="p-3 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400"
+                                    class="p-2 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400"
                                     title="Edit Kasir">
-                                    <svg class="w-10 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg class="w-6 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path
                                             d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z">
                                         </path>
@@ -74,11 +100,11 @@
                                     </svg>
                                 </button>
 
-                                <!-- Tombol Hapus (Ikon) -->
+                             
                                 <button @click="openDeleteModal(cashier.id)"
-                                    class="p-3 rounded-full bg-red-100 dark:bg-red-500/30 text-red-500 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/40"
+                                    class="p-2 rounded-full bg-red-100 dark:bg-red-500/30 text-red-500 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/40"
                                     title="Hapus Kasir">
-                                    <svg class="w-10 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg class="w-6 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd"
                                             d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
                                             clip-rule="evenodd"></path>
@@ -86,7 +112,8 @@
                                 </button>
                             </div>
 
-                        </div>
+                        </div> -->
+                        
                     </div>
 
                 </div>
@@ -101,7 +128,6 @@
 
         <!-- Modals -->
         <CashierFormModal />
-        <!-- ✅ PERBAIKAN: Tambahkan prop untuk styling tombol konfirmasi -->
         <BaseModal :isOpen="isDeleteModalOpen" :loading="isLoading" @close="isDeleteModalOpen = false"
             @confirm="confirmDelete" confirmButtonClass="bg-red-500 hover:bg-red-600 text-white">
             <template #header>
