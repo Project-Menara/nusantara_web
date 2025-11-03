@@ -47,40 +47,56 @@
             <div>
               <ProductSelector label="Produk yang Harus Dibeli" @addProduct="addProductToBundleBuy" />
               <div v-if="formData.eventBundleBuys.length"
-                class="mt-4 max-h-48 overflow-y-auto space-y-3 pr-2 border rounded-md p-2 bg-gray-50 dark:bg-gray-800">
+                class="mt-4 flex flex-wrap gap-3 p-2 border rounded-md bg-gray-50 dark:bg-gray-800">
                 <div v-for="(item, index) in formData.eventBundleBuys" :key="item.product.id"
-                  class="flex items-center gap-3 p-2 bg-white dark:bg-gray-700 rounded shadow-sm border dark:border-gray-600">
-                  <img :src="item.product.coverImage" class="w-12 h-12 object-cover rounded flex-shrink-0"
+                  class="relative w-40 bg-white dark:bg-gray-700 rounded-md shadow-sm border dark:border-gray-600 flex flex-col overflow-hidden">
+
+                  <button @click="removeBundleBuyItem(index)" type="button"
+                    class="absolute top-1 right-1  w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 focus:outline-none"
+                    title="Hapus produk">
+                    <TrashIcon class="h-4 w-4" />
+                  </button>
+
+                  <img :src="item.product.coverImage || item.product.image" class="w-full h-20 object-cover"
                     alt="Produk" />
-                  <div class="flex-grow min-w-0">
-                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ item.product.name }}</p>
+
+                  <div class="p-2 flex-grow">
+                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" :title="item.product.name">
+                      {{ item.product.name }}</p>
                     <p class="text-xs text-gray-500">{{ item.product.code }}</p>
                   </div>
-                  <input v-model.number="item.quantity" type="number" min="1" class="form-input w-20 text-center" />
-                  <button @click="removeBundleBuyItem(index)" type="button"
-                    class="text-gray-400 hover:text-red-500 flex-shrink-0" title="Hapus produk">
-                    <TrashIcon class="h-5 w-5" />
-                  </button>
+
+                  <div class="p-2 pt-0">
+                    <label class="block text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Kuantitas</label>
+                    <input v-model.number="item.quantity" type="number" min="1" class="form-input w-full text-center" />
+                  </div>
                 </div>
               </div>
             </div>
+
             <div>
               <ProductSelector label="Hadiah Produk (Reward)" @addProduct="addProductToBundleReward" />
               <div v-if="formData.eventBundleRewards.length"
-                class="mt-4 max-h-48 overflow-y-auto space-y-3 pr-2 border rounded-md p-2 bg-gray-50 dark:bg-gray-800">
+                class="mt-4 flex flex-wrap gap-3 p-2 border rounded-md bg-gray-50 dark:bg-gray-800">
                 <div v-for="(item, index) in formData.eventBundleRewards" :key="item.product.id"
-                  class="flex items-center gap-3 p-2 bg-white dark:bg-gray-700 rounded shadow-sm border dark:border-gray-600">
-                  <img :src="item.product.coverImage" class="w-12 h-12 object-cover rounded flex-shrink-0"
+                  class="relative w-40 bg-white dark:bg-gray-700 rounded-md shadow-sm border dark:border-gray-600 flex flex-col overflow-hidden">
+
+                  <button @click="removeBundleRewardItem(index)" type="button"
+                    class="absolute top-1 right-1  w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 focus:outline-none"
+                    title="Hapus produk">
+                    <TrashIcon class="h-4 w-4" />
+                  </button>
+                  <img :src="item.product.coverImage || item.product.image" class="w-full h-20 object-cover"
                     alt="Produk" />
-                  <div class="flex-grow min-w-0">
-                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ item.product.name }}</p>
+                  <div class="p-2 flex-grow">
+                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" :title="item.product.name">
+                      {{ item.product.name }}</p>
                     <p class="text-xs text-gray-500">{{ item.product.code }}</p>
                   </div>
-                  <input v-model.number="item.quantity" type="number" min="1" class="form-input w-20 text-center" />
-                  <button @click="removeBundleRewardItem(index)" type="button"
-                    class="text-gray-400 hover:text-red-500 flex-shrink-0" title="Hapus produk">
-                    <TrashIcon class="h-5 w-5" />
-                  </button>
+                  <div class="p-2 pt-0">
+                    <label class="block text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Kuantitas</label>
+                    <input v-model.number="item.quantity" type="number" min="1" class="form-input w-full text-center" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -89,23 +105,35 @@
           <div v-if="formData.typeEvent === 'DISKON'" class="space-y-4 pt-4 border-t">
             <ProductSelector label="Produk yang Didiskon" @addProduct="addProductToDiscount" />
             <div v-if="formData.eventProducts.length"
-              class="mt-4 max-h-64 overflow-y-auto space-y-3 pr-2 border rounded-md p-2 bg-gray-50 dark:bg-gray-800">
+              class="mt-4 flex flex-wrap justify-around gap-3 p-2 border rounded-md bg-gray-50 dark:bg-gray-800">
+
               <div v-for="(item, index) in formData.eventProducts" :key="item.product.id"
-                class="flex items-center gap-3 p-2 bg-white dark:bg-gray-700 rounded shadow-sm border dark:border-gray-600">
-                <img :src="item.product.coverImage" class="w-12 h-12 object-cover rounded flex-shrink-0" alt="Produk" />
-                <div class="flex-grow min-w-0">
-                  <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ item.product.name }}</p>
+                class="relative w-48 bg-white dark:bg-gray-700 rounded-md shadow-sm border dark:border-gray-600 flex flex-col overflow-hidden">
+
+                <button @click="removeDiscountItem(index)" type="button"
+                  class="absolute top-1 right-1 z-10 w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 focus:outline-none"
+                  title="Hapus produk">
+                  <TrashIcon class="h-4 w-4" />
+                </button>
+
+                <img :src="item.product.coverImage || item.product.image" class="w-full h-24 object-cover"
+                  alt="Produk" />
+
+                <div class="p-2 flex-grow">
+                  <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" :title="item.product.name">{{
+                    item.product.name }}</p>
                   <p class="text-xs text-gray-500">{{ item.product.code }}</p>
                 </div>
-                <div class="flex items-center flex-shrink-0">
-                  <input v-model.number="item.discount_percent" type="number" min="1" max="100"
-                    class="form-input w-24 text-center" placeholder="0" />
-                  <span class="ml-1.5 text-gray-500">%</span>
+
+                <div class="p-2 pt-0">
+                  <label class="block text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Diskon (%)</label>
+                  <div class="relative">
+                    <input v-model.number="item.discount_percent" type="number" min="1" max="100"
+                      class="form-input w-full text-center pr-6" placeholder="0" />
+                    <span
+                      class="absolute inset-y-0 right-0 flex items-center pr-2 text-gray-500 dark:text-gray-400">%</span>
+                  </div>
                 </div>
-                <button @click="removeDiscountItem(index)" type="button"
-                  class="text-gray-400 hover:text-red-500 flex-shrink-0" title="Hapus produk">
-                  <TrashIcon class="h-5 w-5" />
-                </button>
               </div>
             </div>
           </div>
