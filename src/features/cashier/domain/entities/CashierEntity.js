@@ -1,4 +1,5 @@
 // Mendefinisikan struktur data bersih untuk Kasir yang akan digunakan di seluruh aplikasi.
+// cashierEntity.js
 export class CashierEntity {
   constructor({
     id,

@@ -1,3 +1,4 @@
+// cashierRepository.js
 import { ICashierRepository } from "../../domain/repository/ICashierRepository";
 import { CashierEntity } from "../../domain/entities/CashierEntity";
 import { left, right, ServerFailure } from "@/core/error/failure";

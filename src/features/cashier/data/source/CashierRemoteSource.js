@@ -1,3 +1,4 @@
+// cashierRemoteSource.js
 import apiClient from "@/lib/apiClient.js";
 
 // Kelas yang bertanggung jawab penuh untuk berinteraksi dengan endpoint API kasir.

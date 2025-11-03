@@ -1,3 +1,4 @@
+// cashierResponseModel.js
 import { CashierEntity } from "../../domain/entities/CashierEntity";
 import { PaginationEntity } from "@/core/domain/entities/PaginationEntity";
 

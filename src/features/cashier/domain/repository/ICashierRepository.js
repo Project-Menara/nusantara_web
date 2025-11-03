@@ -1,4 +1,5 @@
 // Kontrak atau "Blueprint" yang mendefinisikan semua metode yang harus dimiliki oleh repository kasir.
+// ICashierRepository.js
 export class ICashierRepository {
   async getCashiers(page = 1, search = "") {
     throw new Error("METHOD_NOT_IMPLEMENTED");

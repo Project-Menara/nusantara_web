@@ -1,3 +1,4 @@
+// useCashierStore.js
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useModalStore } from "@/stores/modalStore";
