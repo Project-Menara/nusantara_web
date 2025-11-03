@@ -1,3 +1,4 @@
+// path.js
 export const ROUTE_PATHS = {
   // Public
   LOGIN: "/login",
@@ -10,6 +11,7 @@ export const ROUTE_PATHS = {
   DASHBOARD: "/dashboard",
   PRODUCT_TYPES: "/product-types",
   PRODUCTS: "/products",
+  SHOP_PRODUCTS: "/shop-products",
   STORE_MANAGEMENT: "/store-management",
   CASHIER_MANAGEMENT: "/cashier-management",
   CUSTOMER_REVIEWS: "/customer-reviews",

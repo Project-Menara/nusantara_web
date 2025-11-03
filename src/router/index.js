@@ -1,3 +1,4 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "../features/auth/presentation/stores/authStore";
 import { ROUTE_PATHS } from "./path";
@@ -66,6 +67,11 @@ const routes = [
       },
       {
         path: "orders",
+        component: Dashboard, // Placeholder
+        meta: { roles: ["admin"] },
+      },
+      {
+        path: "shop-products",
         component: Dashboard, // Placeholder
         meta: { roles: ["admin"] },
       },
