@@ -2,31 +2,24 @@
 import { IEventRepository } from '../../domain/repository/IEventRepository';
 import { EventRemoteSource } from '../source/EventRemoteSource';
 import { EventResponseModel } from '../model/EventResponseModel';
-import { EventEntity, ProductEntity, EventBundleItemEntity, EventProductDiscountEntity } from '../../../event/domain/entities/EventEntity';
+import { EventEntity, EventBundleItemEntity, EventProductDiscountEntity } from '../../../event/domain/entities/EventEntity';
 import { left, right } from '@/core/error/failure';
 import { ServerFailure } from '@/core/error/failure';
 
 // Helper mapper untuk data tunggal (digunakan di create, update, getById)
 const mapSingleResponseToEntity = (data) => {
-    // Helper mapper untuk Product
-    const mapProduct = (item) => new ProductEntity({
-        id: item.id, name: item.name, image: item.image, code: item.code, price: item.price, unit: item.unit,
-        description: item.description, status: item.status, typeProduct: item.type_product,
-        productImages: item.product_images, createdBy: item.created_by, createdAt: item.created_at,
-        updatedAt: item.updated_at, deletedAt: item.deleted_at,
-    });
-    // Helper mapper untuk EventBundleItem
+
     const mapEventBundleItem = (item) => new EventBundleItemEntity({
         id: item.id, event: item.event,
-        product: item.product ? mapProduct(item.product) : null,
+        product: item.product,
         quantity: item.quantity, createdAt: item.created_at, updatedAt: item.updated_at, deletedAt: item.deleted_at
     });
 
-    // ✅ HELPER MAPPER BARU di sini juga
+    // ✅ PERBAIKAN: Lakukan hal yang sama untuk 'mapEventProductDiscount'.
     const mapEventProductDiscount = (item) => new EventProductDiscountEntity({
         id: item.id,
         event: item.event,
-        product: item.product ? mapProduct(item.product) : null,
+        product: item.product,
         discountPercent: item.discount_percent,
         createdAt: item.created_at,
         updatedAt: item.updated_at,
