@@ -72,9 +72,22 @@
             <MapIcon class="w-5 h-5 mr-2 text-gray-500 dark:text-gray-400" />
             <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Lokasi</h4>
           </div>
-          <div class="w-full h-64 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
-            <p class="text-gray-500">Tempat untuk Peta</p>
+
+          <div class="w-full h-64 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700">
+
+            <a v-if="googleApiKey" :href="googleMapsUrl" target="_blank" rel="noopener noreferrer"
+              title="Buka di Google Maps">
+              <img :src="staticMapUrl" alt="Peta lokasi toko"
+                class="w-full h-full object-cover transition-transform duration-300 hover:scale-110" />
+            </a>
+
+            <div v-else class="flex items-center justify-center h-full p-4">
+              <p class="text-gray-500 text-sm text-center">
+                Google Maps API Key (VITE_GOOGLE_MAPS_API_KEY) belum diatur di .env
+              </p>
+            </div>
           </div>
+
           <div class="text-xs text-gray-500 dark:text-gray-400 mt-2">
             <p>Lat: {{ shop.lat }}</p>
             <p>Lng: {{ shop.lang }}</p>
@@ -92,6 +105,48 @@ import { computed } from 'vue';
 import { useShopContextStore } from '@/features/shop-context/presentation/stores/useShopContextStore';
 import { useUiStore } from '@/stores/uiStore';
 import { storeToRefs } from 'pinia';
+// ✅ Tambahkan MapIcon
+import { MapPinIcon, InformationCircleIcon, PhotoIcon, MapIcon } from '@heroicons/vue/24/outline';
+
+const shopContextStore = useShopContextStore();
+const uiStore = useUiStore();
+
+const { currentShopDetails, isLoading } = storeToRefs(shopContextStore);
+const shop = computed(() => currentShopDetails.value);
+
+// --- ✅ TAMBAHKAN BLOK INI ---
+
+// 1. Ambil API Key dari environment variables Anda
+//    Pastikan nama variabel ini (VITE_GOOGLE_MAPS_API_KEY) sesuai dengan file .env Anda
+const googleApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+// 2. Buat URL untuk gambar peta statis
+const staticMapUrl = computed(() => {
+  if (!shop.value || !googleApiKey) return '';
+
+  const lat = shop.value.lat;
+  const lng = shop.value.lang;
+  const size = "600x300"; // Sesuaikan ukuran (lebar x tinggi)
+  const zoom = 15;
+
+  return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${size}&markers=color:red%7C${lat},${lng}&key=${googleApiKey}`;
+});
+
+// 3. (Opsional tapi bagus) Buat URL untuk link ke Google Maps interaktif
+const googleMapsUrl = computed(() => {
+  if (!shop.value) return '#';
+  // Ini akan membuka Google Maps di tab baru, terpusat di lokasi toko
+  return `https://www.google.com/maps/search/?api=1&query=${shop.value.lat},${shop.value.lang}`;
+});
+
+// --- AKHIR BLOK TAMBAHAN ---
+</script>
+
+<!-- <script setup>
+import { computed } from 'vue';
+import { useShopContextStore } from '@/features/shop-context/presentation/stores/useShopContextStore';
+import { useUiStore } from '@/stores/uiStore';
+import { storeToRefs } from 'pinia';
 
 const shopContextStore = useShopContextStore();
 const uiStore = useUiStore();
@@ -101,4 +156,4 @@ const { currentShopDetails, isLoading } = storeToRefs(shopContextStore);
 
 // Buat computed property untuk mempermudah akses
 const shop = computed(() => currentShopDetails.value);
-</script>
+</script> -->
