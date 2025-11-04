@@ -4,6 +4,7 @@ import { useAuthStore } from "../features/auth/presentation/stores/authStore";
 import { ROUTE_PATHS } from "./path";
 // Impor Layout
 import DashboardLayout from "@/layouts/DashboardLayout.vue";
+import { useShopContextStore } from '@/features/shop-context/presentation/stores/useShopContextStore';
 
 // Impor Halaman
 import Dashboard from "@/pages/Dashboard.vue";
@@ -19,6 +20,12 @@ const routes = [
     path: ROUTE_PATHS.FORBIDDEN,
     name: "Forbidden",
     component: () => import("@/partials/Forbidden.vue"),
+  },
+  {
+    path: ROUTE_PATHS.UNASSIGNED_SHOP,
+    name: "UnassignedShop",
+    component: () => import("@/partials/UnassignedShopPage.vue"),
+    meta: { roles: ["admin"] },
   },
 
   // Halaman terproteksi yang menggunakan DashboardLayout
@@ -62,52 +69,47 @@ const routes = [
       },
       {
         path: "customer-reviews",
-        component: Dashboard, // Placeholder
+        component: Dashboard,
         meta: { roles: ["superadmin"] },
       },
       {
         path: "orders",
-        component: Dashboard, // Placeholder
-        meta: { roles: ["admin"] },
-      },
-      {
-        path: "shop-products",
-        component: Dashboard, // Placeholder
+        component: Dashboard,
         meta: { roles: ["admin"] },
       },
       {
         path: "finance",
-        component: Dashboard, // Placeholder
+        component: Dashboard,
         meta: { roles: ["admin"] },
       },
       // --- Group Promosi ---
       {
         path: "banners",
         component: () =>
-          import("@/features/banner/presentation/pages/BannerPage.vue"), // Placeholder
+          import("@/features/banner/presentation/pages/BannerPage.vue"),
         meta: { roles: ["superadmin"] },
       },
       {
         path: "events",
         component: () =>
-          import("@/features/event/presentation/pages/EventPage.vue"), // Placeholder
+          import("@/features/event/presentation/pages/EventPage.vue"),
         meta: { roles: ["superadmin"] },
       },
       {
         path: "vouchers",
         component: () =>
-          import("@/features/voucher/presentation/pages/VoucherPage.vue"), // Placeholder
+          import("@/features/voucher/presentation/pages/VoucherPage.vue"),
         meta: { roles: ["superadmin"] },
       },
       // --- Group Laporan ---
       {
         path: "transaction-reports",
-        component: Dashboard, // Placeholder
+        component: Dashboard,
         meta: { roles: ["superadmin"] },
       },
       {
         path: "financial-reports",
-        component: Dashboard, // Placeholder
+        component: Dashboard,
         meta: { roles: ["superadmin"] },
       },
       // --- Group Lainnya ---
@@ -117,6 +119,19 @@ const routes = [
         component: () =>
           import("@/features/settings/presentation/pages/SettingsPage.vue"),
         meta: { roles: ["superadmin", "admin"] },
+      },
+      {
+        path: "shop-profile", 
+        name: "ShopProfile",
+        component: () => import("@/features/shop-profile/presentation/pages/ShopProfilePage.vue"),
+        meta: { roles: ["admin"] },
+      },
+      {
+        path: "shop-products",
+        name: "ShopProducts",
+        component: () => 
+          import("@/features/shop-products/presentation/pages/ShopProductsPage.vue"),
+        meta: { roles: ["admin"] },
       },
     ],
   },
@@ -134,15 +149,46 @@ const router = createRouter({
   routes,
 });
 
-// Navigation guard Anda sudah benar dan tidak perlu diubah
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
   const requiredRoles = to.meta.roles;
+
+  // Pastikan auth diinisialisasi jika memuat ulang halaman
+  if (authStore.token && !authStore.isAuthenticated) {
+    await authStore.initializeAuth();
+  }
 
   if (requiredRoles) {
     if (authStore.isAuthenticated) {
       const userRole = authStore.user.role;
+
       if (requiredRoles.includes(userRole)) {
+        // --- ✅ LOGIKA BARU UNTUK KONTEKS TOKO ADMIN ---
+        if (userRole === "admin") {
+          const shopContextStore = useShopContextStore();
+
+          // 1. Pastikan konteks sudah dimuat
+          if (!shopContextStore.isContextLoaded) {
+            // initializeAuth() di atas sudah memanggil ini,
+            // tapi ini sebagai pengaman jika user bernavigasi secara internal
+            await shopContextStore.initializeShopContext();
+          }
+
+          // 2. Cek status penugasan toko
+          if (!shopContextStore.hasAssignedShops) {
+            // JIKA KASIR TIDAK PUNYA TOKO:
+            if (to.name !== "UnassignedShop") {
+              // Paksa ke halaman 'UnassignedShop'
+              return next({ name: "UnassignedShop" });
+            }
+          } else {
+            // JIKA KASIR PUNYA TOKO:
+            if (to.name === "UnassignedShop") {
+              // Jangan biarkan dia ke halaman 'UnassignedShop', lempar ke Dashboard
+              return next({ name: "Dashboard" });
+            }
+          }
+        }
         next();
       } else {
         next({ name: "Forbidden" });

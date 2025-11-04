@@ -3,6 +3,7 @@ export const ROUTE_PATHS = {
   // Public
   LOGIN: "/login",
   FORBIDDEN: "/utility/403",
+  UNASSIGNED_SHOP: "/unassigned-shop",
 
   // Layout Induk
   HOME: "/",
@@ -23,4 +24,5 @@ export const ROUTE_PATHS = {
   TRANSACTION_REPORTS: "/transaction-reports",
   FINANCIAL_REPORTS: "/financial-reports",
   SETTINGS: "/settings",
+  SHOP_PROFILE: "/shop-profile",
 };

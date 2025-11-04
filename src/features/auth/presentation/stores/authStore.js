@@ -11,6 +11,7 @@ import {
   RateLimitFailure,
   IncorrectPasswordFailure,
 } from "../../../../core/error/failure";
+import { useShopContextStore } from "@/features/shop-context/presentation/stores/useShopContextStore";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
@@ -73,6 +74,12 @@ export const useAuthStore = defineStore("auth", () => {
       isAuthenticated.value = true;
       isLoading.value = false;
 
+      // Cek jika yg login adalah admin
+      if (user.value.role === 'admin') {
+        const shopContextStore = useShopContextStore();
+        await shopContextStore.initializeShopContext();
+      }
+
       modalStore.openModal({
         newTitle: "Login Berhasil",
         newMessage: `Selamat datang kembali, ${data.user.name}!`,
@@ -98,12 +105,23 @@ export const useAuthStore = defineStore("auth", () => {
         user.value = result.right;
         token.value = existingToken;
         isAuthenticated.value = true;
+
+        // ✅ 3. PANGGIL INITIALIZE KONTEKS JIKA ROLE-NYA ADMIN
+        if (user.value.role === 'admin') {
+          const shopContextStore = useShopContextStore();
+          await shopContextStore.initializeShopContext();
+        }
       }
       isLoading.value = false;
     }
   }
 
   async function logout() {
+
+    // ✅ 4. BERSIHKAN KONTEKS SAAT LOGOUT
+    const shopContextStore = useShopContextStore();
+    shopContextStore.clearContext();
+
     isLoading.value = true;
     try {
       await logoutUseCase.execute();
@@ -127,7 +145,7 @@ export const useAuthStore = defineStore("auth", () => {
     isLoading,
     error,
     login,
-    logout, // Hapus duplikasi
+    logout,
     initializeAuth,
   };
 });

@@ -133,6 +133,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   DocumentTextIcon,
+  IdentificationIcon,
 } from "@heroicons/vue/24/outline";
 
 export default {
@@ -263,6 +264,12 @@ export default {
         type: "group",
         title: "Lainnya",
         items: [
+          {
+            name: "Profil Toko Saya",
+            path: ROUTE_PATHS.SHOP_PROFILE, 
+            iconComponent: IdentificationIcon,
+            roles: ["admin"],
+          },
           {
             name: "Setting",
             path: ROUTE_PATHS.SETTINGS,
